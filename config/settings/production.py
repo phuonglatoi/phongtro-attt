@@ -71,7 +71,7 @@ if SENTRY_DSN:
     )
 
 # ============================================
-# LOGGING
+# LOGGING (Console-based for Azure App Service)
 # ============================================
 LOGGING = {
     'version': 1,
@@ -83,35 +83,29 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'console': {
             'level': 'WARNING',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
-            'maxBytes': 10 * 1024 * 1024,  # 10MB
-            'backupCount': 5,
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'security': {
+        'console_security': {
             'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'filename': BASE_DIR / 'logs' / 'security.log',
-            'maxBytes': 10 * 1024 * 1024,
-            'backupCount': 10,
+            'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['console'],
             'level': 'WARNING',
         },
         'django.security': {
-            'handlers': ['security'],
+            'handlers': ['console_security'],
             'level': 'INFO',
             'propagate': False,
         },
         'apps.security': {
-            'handlers': ['security'],
+            'handlers': ['console_security'],
             'level': 'INFO',
         },
     },
@@ -154,3 +148,4 @@ if APPLICATIONINSIGHTS_CONNECTION_STRING:
     }
     LOGGING['loggers']['django']['handlers'].append('azure')
     LOGGING['loggers']['apps.security']['handlers'].append('azure')
+    LOGGING['loggers']['django.security']['handlers'].append('azure')
