@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý phòng - {{ nhatro.tennt }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-door-open me-2"></i>{{ nhatro.tennt }}</h2>
+            <p class="text-muted mb-0"><i class="fas fa-map-marker-alt me-1"></i>{{ nhatro.diachi }}</p>
+        </div>
+        <a href="{% url 'bookings:create_phongtro' nhatro_id=nhatro.mant %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Thêm phòng
+        </a>
+    </div>
+    
+    {% if phongtro_list %}
+    <div class="row">
+        {% for phongtro in phongtro_list %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 {% if phongtro.trangthai == 'Chờ duyệt' %}border-warning{% elif phongtro.trangthai == 'Từ chối' %}border-danger{% endif %}">
+                <div class="card-body">
+                    <h5 class="card-title">{{ phongtro.tenpt }}</h5>
+                    <p class="card-text">
+                        <span class="text-primary fw-bold">{{ phongtro.giatien|floatformat:0 }} VNĐ/tháng</span>
+                    </p>
+                    <p class="mb-1"><i class="fas fa-expand me-2"></i>{{ phongtro.dientich|default:"--" }} m²</p>
+                    <p class="mb-1"><i class="fas fa-users me-2"></i>{{ phongtro.songuoio|default:0 }} người</p>
+
+                    <!-- Status Badge -->
+                    {% if phongtro.trangthai == 'Còn trống' %}
+                        <span class="badge bg-success"><i class="fas fa-check me-1"></i>{{ phongtro.trangthai }}</span>
+                    {% elif phongtro.trangthai == 'Đã thuê' %}
+                        <span class="badge bg-secondary"><i class="fas fa-user me-1"></i>{{ phongtro.trangthai }}</span>
+                    {% elif phongtro.trangthai == 'Chờ duyệt' %}
+                        <span class="badge bg-warning"><i class="fas fa-clock me-1"></i>Đang chờ Admin duyệt</span>
+                    {% elif phongtro.trangthai == 'Từ chối' %}
+                        <span class="badge bg-danger"><i class="fas fa-times me-1"></i>Bị từ chối</span>
+                        <p class="text-danger small mt-2 mb-0">
+                            <i class="fas fa-info-circle me-1"></i>Vui lòng chỉnh sửa và gửi lại.
+                        </p>
+                    {% else %}
+                        <span class="badge bg-info">{{ phongtro.trangthai }}</span>
+                    {% endif %}
+                </div>
+
+                <!-- Only show status change for approved rooms -->
+                {% if phongtro.trangthai == 'Còn trống' or phongtro.trangthai == 'Đã thuê' or phongtro.trangthai == 'Đang sửa chữa' %}
+                <div class="card-footer">
+                    <form method="post" action="{% url 'bookings:update_phongtro_status' pk=phongtro.mapt %}" class="d-inline">
+                        {% csrf_token %}
+                        <select name="trangthai" class="form-select form-select-sm d-inline-block" style="width: auto;"
+                                onchange="this.form.submit()">
+                            <option value="Còn trống" {% if phongtro.trangthai == 'Còn trống' %}selected{% endif %}>Còn trống</option>
+                            <option value="Đã thuê" {% if phongtro.trangthai == 'Đã thuê' %}selected{% endif %}>Đã thuê</option>
+                            <option value="Đang sửa chữa" {% if phongtro.trangthai == 'Đang sửa chữa' %}selected{% endif %}>Đang sửa chữa</option>
+                        </select>
+                    </form>
+                </div>
+                {% elif phongtro.trangthai == 'Chờ duyệt' %}
+                <div class="card-footer bg-warning bg-opacity-25">
+                    <small class="text-muted"><i class="fas fa-hourglass-half me-1"></i>Đang chờ xét duyệt...</small>
+                </div>
+                {% elif phongtro.trangthai == 'Từ chối' %}
+                <div class="card-footer bg-danger bg-opacity-10">
+                    <a href="#" class="btn btn-outline-primary btn-sm"
+                       onclick="alert('Chức năng sửa phòng đang phát triển');">
+                        <i class="fas fa-edit me-1"></i>Sửa và gửi lại
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>Nhà trọ này chưa có phòng nào.
+        <a href="{% url 'bookings:create_phongtro' nhatro_id=nhatro.mant %}">Thêm phòng mới</a>
+    </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="{% url 'bookings:manage_nhatro' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại danh sách nhà trọ
+        </a>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Chính sách bảo mật - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-primary mb-3">
+                    <i class="fas fa-shield-alt me-2"></i>Chính sách bảo mật
+                </h1>
+                <p class="text-muted">Cập nhật lần cuối: Tháng 12, 2024</p>
+            </div>
+            
+            <!-- Security Badge -->
+            <div class="row g-3 mb-5">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-lock fa-2x mb-2"></i>
+                            <h6 class="mb-0">Mã hóa SSL</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-user-shield fa-2x mb-2"></i>
+                            <h6 class="mb-0">Xác thực 2FA</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white text-center h-100">
+                        <div class="card-body">
+                            <i class="fas fa-database fa-2x mb-2"></i>
+                            <h6 class="mb-0">Dữ liệu an toàn</h6>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content -->
+            <div class="card shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    
+                    <section class="mb-5">
+                        <h4 class="text-primary mb-3"><i class="fas fa-database me-2"></i>1. Thông tin chúng tôi thu thập</h4>
+                        <p>PhongTro.vn thu thập các thông tin sau để cung cấp dịch vụ tốt nhất:</p>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Loại thông tin</th>
+                                        <th>Chi tiết</th>
+                                        <th>Mục đích</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Thông tin cá nhân</strong></td>
+                                        <td>Họ tên, email, số điện thoại</td>
+                                        <td>Xác thực tài khoản, liên hệ</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Thông tin đăng nhập</strong></td>
+                                        <td>IP, thiết bị, thời gian</td>
+                                        <td>Bảo mật tài khoản</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Hoạt động</strong></td>
+                                        <td>Tìm kiếm, xem phòng, đặt lịch</td>
+                                        <td>Cải thiện trải nghiệm</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    
+                    <section class="mb-5">
+                        <h4 class="text-primary mb-3"><i class="fas fa-cogs me-2"></i>2. Cách chúng tôi sử dụng thông tin</h4>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Cung cấp và duy trì dịch vụ</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Xác thực danh tính và bảo mật tài khoản</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Gửi thông báo quan trọng về tài khoản</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Cải thiện và phát triển tính năng mới</li>
+                            <li class="mb-2"><i class="fas fa-check text-success me-2"></i>Phát hiện và ngăn chặn gian lận</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="mb-5">
+                        <h4 class="text-primary mb-3"><i class="fas fa-lock me-2"></i>3. Bảo vệ thông tin</h4>
+                        <p>Chúng tôi áp dụng các biện pháp bảo mật tiên tiến:</p>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-key text-success me-2"></i>Mã hóa mật khẩu</h6>
+                                        <small class="text-muted">Sử dụng bcrypt với salt để mã hóa mật khẩu, đảm bảo không ai có thể đọc được.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-mobile-alt text-success me-2"></i>Xác thực 2 yếu tố (2FA)</h6>
+                                        <small class="text-muted">Bảo vệ tài khoản với mã OTP từ ứng dụng Google Authenticator.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-globe text-success me-2"></i>Kết nối SSL/TLS</h6>
+                                        <small class="text-muted">Mọi dữ liệu truyền tải đều được mã hóa HTTPS.</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border-success h-100">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-history text-success me-2"></i>Theo dõi đăng nhập</h6>
+                                        <small class="text-muted">Ghi nhận lịch sử đăng nhập và cảnh báo hoạt động bất thường.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section class="mb-5">
+                        <h4 class="text-primary mb-3"><i class="fas fa-share-alt me-2"></i>4. Chia sẻ thông tin</h4>
+                        <p>Chúng tôi <strong>KHÔNG</strong> bán hoặc chia sẻ thông tin cá nhân của bạn với bên thứ ba, ngoại trừ:</p>
+                        <ul>
+                            <li>Khi có yêu cầu từ cơ quan pháp luật</li>
+                            <li>Để bảo vệ quyền lợi hợp pháp của PhongTro.vn</li>
+                            <li>Khi có sự đồng ý của bạn</li>
+                        </ul>
+                    </section>
+                    
+                    <section class="mb-5">
+                        <h4 class="text-primary mb-3"><i class="fas fa-user-cog me-2"></i>5. Quyền của bạn</h4>
+                        <div class="alert alert-success">
+                            <ul class="mb-0">
+                                <li><strong>Quyền truy cập:</strong> Xem thông tin cá nhân được lưu trữ</li>
+                                <li><strong>Quyền chỉnh sửa:</strong> Cập nhật thông tin không chính xác</li>
+                                <li><strong>Quyền xóa:</strong> Yêu cầu xóa tài khoản và dữ liệu</li>
+                                <li><strong>Quyền từ chối:</strong> Từ chối nhận email marketing</li>
+                            </ul>
+                        </div>
+                    </section>
+                    
+                    <section class="mb-4">
+                        <h4 class="text-primary mb-3"><i class="fas fa-envelope me-2"></i>6. Liên hệ</h4>
+                        <p>Nếu có câu hỏi về chính sách bảo mật, vui lòng liên hệ:</p>
+                        <ul>
+                            <li>Email: <a href="mailto:privacy@phongtro.vn">privacy@phongtro.vn</a></li>
+                            <li>Hotline: 1900-xxxx</li>
+                        </ul>
+                    </section>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="text-center mt-4">
+                <a href="{% url 'rooms:terms' %}" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-file-contract me-1"></i>Điều khoản sử dụng
+                </a>
+                <a href="{% url 'rooms:policies' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-clipboard-list me-1"></i>Quy định đăng tin
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

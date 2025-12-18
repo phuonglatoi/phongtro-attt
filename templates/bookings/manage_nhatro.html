@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý nhà trọ{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-building me-2"></i>Quản lý nhà trọ</h2>
+        <a href="{% url 'bookings:create_nhatro' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>Thêm nhà trọ
+        </a>
+    </div>
+    
+    {% if nhatro_list %}
+    <div class="row">
+        {% for nhatro in nhatro_list %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">{{ nhatro.tennt }}</h5>
+                    {% if nhatro.trangthai %}
+                        <span class="badge bg-success">Hoạt động</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Ngừng hoạt động</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <p><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ nhatro.diachi }}</p>
+                    <p class="mb-1"><i class="fas fa-bolt text-warning me-2"></i>Giá điện: {{ nhatro.giadien|floatformat:0 }} VNĐ/kWh</p>
+                    <p class="mb-1"><i class="fas fa-tint text-info me-2"></i>Giá nước: {{ nhatro.gianuoc|floatformat:0 }} VNĐ/m³</p>
+                    {% if nhatro.mota %}
+                    <p class="text-muted mt-2">{{ nhatro.mota|truncatewords:30 }}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'bookings:manage_phongtro' nhatro_id=nhatro.mant %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-door-open me-1"></i>Quản lý phòng
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-2"></i>Bạn chưa có nhà trọ nào.
+        <a href="{% url 'bookings:create_nhatro' %}">Thêm nhà trọ mới</a>
+    </div>
+    {% endif %}
+    
+    <div class="mt-4">
+        <a href="{% url 'bookings:landlord_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i>Quay lại Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Đặt lịch xem phòng - {{ room.tenpt }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Đặt lịch xem phòng</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Phòng:</strong> {{ room.tenpt }}<br>
+                        <strong>Nhà trọ:</strong> {{ room.mant.tennt }}<br>
+                        <strong>Địa chỉ:</strong> {{ room.mant.diachi }}<br>
+                        <strong>Giá:</strong> {{ room.giatien|floatformat:0 }} VNĐ/tháng
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="ngayhen" class="form-label">Ngày giờ hẹn <span class="text-danger">*</span></label>
+                            <input type="datetime-local" class="form-control" id="ngayhen" name="ngayhen" required>
+                            <div class="form-text">Chọn ngày giờ bạn muốn đến xem phòng</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="ghichu" class="form-label">Ghi chú</label>
+                            <textarea class="form-control" id="ghichu" name="ghichu" rows="3" 
+                                      placeholder="Ví dụ: Tôi sẽ đến cùng gia đình..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu
+                            </button>
+                            <a href="{% url 'rooms:room_detail' pk=room.mapt %}" class="btn btn-outline-secondary">
+                                Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

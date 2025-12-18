@@ -1,0 +1,35 @@
+# ============================================
+# .dockerignore
+# ============================================
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.hypothesis
+.env
+.venv
+venv/
+ENV/
+env/
+*.sqlite3
+db.sqlite3
+media/
+staticfiles/
+.vscode/
+.idea/
+*.swp
+*.swo

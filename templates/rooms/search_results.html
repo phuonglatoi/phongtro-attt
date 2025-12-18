@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container my-5">
+    <h2 class="mb-4">Kết quả tìm kiếm</h2>
+
+    {% if rooms %}
+        <p>Tìm thấy <strong>{{ rooms|length }}</strong> kết quả phù hợp.</p>
+        
+        <div class="row">
+            {% for room in rooms %}
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    {% if room.image %}
+                    <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.title }}" style="height: 200px; object-fit: cover;">
+                    {% else %}
+                    <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                        Chưa có ảnh
+                    </div>
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ room.title }}</h5>
+                        <p class="card-text text-danger fw-bold">{{ room.price }} VNĐ</p>
+                        <p class="card-text"><small class="text-muted">{{ room.address }}</small></p>
+                        
+                        <a href="#" class="btn btn-primary w-100">Xem chi tiết</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    
+    {% else %}
+        <div class="alert alert-warning text-center">
+            <h4>Không tìm thấy phòng trọ nào!</h4>
+            <p>Vui lòng thử lại với từ khóa khác.</p>
+            <a href="/" class="btn btn-secondary mt-2">Quay lại trang chủ</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

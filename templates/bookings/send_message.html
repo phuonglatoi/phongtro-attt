@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Gửi tin nhắn cho chủ trọ{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-envelope me-2"></i>Gửi tin nhắn cho chủ trọ</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Phòng:</strong> {{ room.tenpt }}<br>
+                        <strong>Chủ trọ:</strong> {{ landlord.hoten }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="noidung" class="form-label">Nội dung tin nhắn</label>
+                            <textarea class="form-control" id="noidung" name="noidung" rows="5" 
+                                      placeholder="Xin chào, tôi muốn hỏi về phòng này..." required></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane me-2"></i>Gửi tin nhắn
+                            </button>
+                            <a href="{% url 'rooms:room_detail' pk=room.mapt %}" class="btn btn-outline-secondary">
+                                Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

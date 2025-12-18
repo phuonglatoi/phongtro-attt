@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Quản lý thiết bị - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4"><i class="fas fa-laptop me-2"></i>Lịch sử đăng nhập</h2>
+
+    <div class="row">
+        <div class="col-md-10">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Các phiên đăng nhập gần đây</h5>
+                </div>
+                <div class="card-body">
+                    {% if login_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>Trạng thái</th>
+                                    <th>Địa chỉ IP</th>
+                                    <th>Thiết bị</th>
+                                    <th>Trình duyệt</th>
+                                    <th>Hệ điều hành</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in login_history %}
+                                <tr>
+                                    <td>{{ log.timestamp|date:"d/m/Y H:i" }}</td>
+                                    <td>
+                                        {% if log.success %}
+                                            <span class="badge bg-success">Thành công</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Thất bại</span>
+                                        {% endif %}
+                                        {% if log.used_2fa %}
+                                            <span class="badge bg-info ms-1">2FA</span>
+                                        {% endif %}
+                                    </td>
+                                    <td><code>{{ log.ip_address }}</code></td>
+                                    <td>{{ log.device_type|default:"Unknown" }}</td>
+                                    <td>{{ log.browser_family|default:"Unknown" }}</td>
+                                    <td>{{ log.os_family|default:"Unknown" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-info-circle fa-3x mb-3"></i>
+                        <p>Chưa có lịch sử đăng nhập nào.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Bảo mật</h5>
+                        <p class="text-muted">Nếu bạn phát hiện hoạt động đáng ngờ, hãy đổi mật khẩu ngay.</p>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'accounts:password_change' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                            </a>
+                            <form method="post" action="{% url 'accounts:logout_all_devices' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger" onclick="return confirm('Bạn có chắc muốn đăng xuất khỏi TẤT CẢ thiết bị?');">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất tất cả thiết bị
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

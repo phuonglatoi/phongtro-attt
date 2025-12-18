@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng ký làm chủ trọ{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-home me-2"></i>Đăng ký làm chủ trọ</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle me-2"></i>Lợi ích khi trở thành chủ trọ:</h5>
+                        <ul class="mb-0">
+                            <li>Đăng tin cho thuê phòng miễn phí</li>
+                            <li>Quản lý nhà trọ và phòng trọ dễ dàng</li>
+                            <li>Nhận thông báo khi có khách hẹn xem phòng</li>
+                            <li>Liên hệ trực tiếp với khách hàng qua tin nhắn</li>
+                        </ul>
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="lydo" class="form-label">Lý do muốn trở thành chủ trọ</label>
+                            <textarea class="form-control" id="lydo" name="lydo" rows="5" 
+                                      placeholder="Vui lòng mô tả về tình trạng nhà trọ của bạn, số lượng phòng, địa chỉ..."></textarea>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="agree" required>
+                            <label class="form-check-label" for="agree">
+                                Tôi cam kết thông tin cung cấp là chính xác và tuân thủ các quy định của PhongTro.vn
+                            </label>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Gửi yêu cầu
+                            </button>
+                            <a href="{% url 'rooms:home' %}" class="btn btn-outline-secondary">
+                                Quay lại trang chủ
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

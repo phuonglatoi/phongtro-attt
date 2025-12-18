@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách phòng trọ - PhongTro.vn{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<section class="bg-primary py-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h1 class="text-white mb-0"><i class="fas fa-home me-2"></i>Tìm phòng trọ</h1>
+                <p class="text-white-50 mb-0">Khám phá hàng nghìn phòng trọ chất lượng</p>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb justify-content-md-end mb-0">
+                        <li class="breadcrumb-item"><a href="{% url 'rooms:home' %}" class="text-white-50">Trang chủ</a></li>
+                        <li class="breadcrumb-item active text-white">Danh sách phòng</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    <!-- Filter Card -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body p-4">
+            <h5 class="mb-3"><i class="fas fa-filter text-primary me-2"></i>Bộ lọc tìm kiếm</h5>
+            <form method="GET">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Giá tối thiểu (VNĐ)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-tag text-muted"></i></span>
+                            <input type="number" name="min_price" class="form-control border-start-0"
+                                   placeholder="1.000.000" value="{{ request.GET.min_price }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Giá tối đa (VNĐ)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fas fa-tag text-muted"></i></span>
+                            <input type="number" name="max_price" class="form-control border-start-0"
+                                   placeholder="5.000.000" value="{{ request.GET.max_price }}">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small text-muted">Sắp xếp theo</label>
+                        <select name="sort" class="form-select">
+                            <option value="">Mặc định</option>
+                            <option value="price_asc">Giá thấp → cao</option>
+                            <option value="price_desc">Giá cao → thấp</option>
+                            <option value="newest">Mới nhất</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-1"></i>Tìm kiếm
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge bg-primary me-2">{{ rooms|length }}</span>
+            <span class="text-muted">phòng trọ được tìm thấy</span>
+        </div>
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-secondary btn-sm active">
+                <i class="fas fa-th-large"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-list"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Room Grid -->
+    <div class="row g-4">
+        {% for room in rooms %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card card-room shadow h-100">
+                <div class="position-relative overflow-hidden">
+                    {% if room.first_image %}
+                    <img src="{{ room.first_image.duongdan }}"
+                         class="card-img-top room-image" alt="{{ room.tenpt }}">
+                    {% else %}
+                    <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=220&fit=crop"
+                         class="card-img-top room-image" alt="{{ room.tenpt }}">
+                    {% endif %}
+                    <span class="price-badge">
+                        {{ room.giatien|floatformat:0 }} VNĐ
+                    </span>
+                    {% if room.trangthai == 'Còn trống' %}
+                    <span class="badge bg-success position-absolute shadow-sm" style="top: 12px; left: 12px;">
+                        <i class="fas fa-check-circle me-1"></i>{{ room.trangthai }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-2">{{ room.tenpt }}</h5>
+                    <p class="card-text text-muted small mb-3">
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                        {{ room.mant.diachi|truncatewords:8 }}
+                    </p>
+                    <div class="d-flex gap-2 mb-3">
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-expand-arrows-alt me-1 text-primary"></i>{{ room.dientich|default:"--" }} m²
+                        </span>
+                        <span class="badge bg-light text-dark">
+                            <i class="fas fa-users me-1 text-primary"></i>{{ room.songuoio|default:0 }} người
+                        </span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-top-0 pt-0">
+                    <a href="{% url 'rooms:room_detail' pk=room.mapt %}" class="btn btn-primary w-100">
+                        <i class="fas fa-eye me-2"></i>Xem chi tiết
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
+                    <i class="fas fa-search fa-3x text-muted"></i>
+                </div>
+                <h5 class="text-muted">Không tìm thấy phòng trọ nào</h5>
+                <p class="text-muted mb-4">Hãy thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
+                <a href="{% url 'rooms:room_list' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-redo me-1"></i>Xem tất cả phòng
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination placeholder -->
+    {% if rooms %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            <li class="page-item disabled">
+                <a class="page-link" href="#"><i class="fas fa-chevron-left"></i></a>
+            </li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}

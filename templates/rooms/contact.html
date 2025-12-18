@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+{% block title %}Liên hệ & Hỗ trợ - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-primary mb-3">
+                    <i class="fas fa-headset me-2"></i>Liên hệ & Hỗ trợ
+                </h1>
+                <p class="text-muted">Chúng tôi luôn sẵn sàng hỗ trợ bạn</p>
+            </div>
+            
+            <!-- Contact Cards -->
+            <div class="row g-4 mb-5">
+                <div class="col-md-4">
+                    <div class="card text-center h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-envelope fa-2x text-primary"></i>
+                            </div>
+                            <h5>Email</h5>
+                            <p class="text-muted mb-2">Gửi email cho chúng tôi</p>
+                            <a href="mailto:support@phongtro.vn" class="btn btn-outline-primary">
+                                support@phongtro.vn
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fas fa-phone fa-2x text-success"></i>
+                            </div>
+                            <h5>Hotline</h5>
+                            <p class="text-muted mb-2">Gọi điện trực tiếp</p>
+                            <a href="tel:1900xxxx" class="btn btn-outline-success">
+                                1900-xxxx
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card text-center h-100 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                                <i class="fab fa-facebook-messenger fa-2x text-info"></i>
+                            </div>
+                            <h5>Chat Online</h5>
+                            <p class="text-muted mb-2">Nhắn tin trực tiếp</p>
+                            <a href="#" class="btn btn-outline-info">
+                                Messenger
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FAQ Section -->
+            <div class="card shadow-sm mb-5">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0"><i class="fas fa-question-circle text-primary me-2"></i>Câu hỏi thường gặp</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="accordion accordion-flush" id="faqAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                                    Làm sao để đăng tin cho thuê phòng?
+                                </button>
+                            </h2>
+                            <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Để đăng tin, bạn cần đăng ký tài khoản và yêu cầu trở thành "Chủ trọ". Sau khi Admin phê duyệt, bạn có thể tạo nhà trọ và đăng tin phòng. Mỗi tin đăng sẽ được xét duyệt trước khi hiển thị công khai.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                                    Tại sao tin đăng của tôi bị từ chối?
+                                </button>
+                            </h2>
+                            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Tin có thể bị từ chối nếu: thiếu thông tin, không có ảnh, giá không hợp lý, hoặc vi phạm quy định. Bạn có thể chỉnh sửa và gửi lại tin. Xem chi tiết tại <a href="{% url 'rooms:policies' %}">Quy định đăng tin</a>.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                                    Làm sao để liên hệ với chủ trọ?
+                                </button>
+                            </h2>
+                            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Đăng nhập tài khoản, vào trang chi tiết phòng trọ và nhấn "Nhắn tin chủ trọ" hoặc "Đặt lịch xem phòng". Hệ thống sẽ gửi thông báo đến chủ trọ.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                                    Bảo mật 2FA là gì?
+                                </button>
+                            </h2>
+                            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    2FA (Two-Factor Authentication) là xác thực 2 yếu tố. Khi bật tính năng này, ngoài mật khẩu, bạn cần nhập mã OTP từ ứng dụng Google Authenticator để đăng nhập. Điều này giúp bảo vệ tài khoản khỏi bị hack.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                                    Làm sao để xóa tài khoản?
+                                </button>
+                            </h2>
+                            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                                <div class="accordion-body">
+                                    Gửi email đến <a href="mailto:support@phongtro.vn">support@phongtro.vn</a> với tiêu đề "Yêu cầu xóa tài khoản" kèm theo email đăng ký. Chúng tôi sẽ xử lý trong 7 ngày làm việc.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Office Info -->
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-6 mb-4 mb-md-0">
+                            <h5><i class="fas fa-building text-primary me-2"></i>Văn phòng</h5>
+                            <p class="mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i>TP. Hồ Chí Minh, Việt Nam</p>
+                            <p class="mb-2"><i class="fas fa-clock text-warning me-2"></i>Thứ 2 - Thứ 6: 8:00 - 17:00</p>
+                            <p class="mb-0"><i class="fas fa-envelope text-info me-2"></i>support@phongtro.vn</p>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <div class="bg-light rounded p-4">
+                                <i class="fas fa-headset fa-4x text-primary mb-3"></i>
+                                <h5>Hỗ trợ 24/7</h5>
+                                <p class="text-muted mb-0">Đội ngũ hỗ trợ sẵn sàng giải đáp mọi thắc mắc</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

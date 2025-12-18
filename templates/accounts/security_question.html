@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Câu hỏi bảo mật - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Câu hỏi bảo mật</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Tại sao cần câu hỏi bảo mật?</strong><br>
+                        Câu hỏi bảo mật giúp xác minh danh tính khi bạn quên mật khẩu hoặc thực hiện các thay đổi nhạy cảm.
+                    </div>
+                    
+                    {% if current_question %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <strong>Câu hỏi hiện tại:</strong> 
+                        {% for key, label in questions %}
+                            {% if key == current_question %}{{ label }}{% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="security_question" class="form-label">
+                                Chọn câu hỏi bảo mật <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="security_question" name="security_question" required>
+                                <option value="">-- Chọn câu hỏi --</option>
+                                {% for key, label in questions %}
+                                <option value="{{ key }}" {% if key == current_question %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <label for="security_answer" class="form-label">
+                                Câu trả lời <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="security_answer" name="security_answer" 
+                                   placeholder="Nhập câu trả lời của bạn" required>
+                            <div class="form-text">
+                                <i class="fas fa-exclamation-triangle text-warning me-1"></i>
+                                Hãy nhớ câu trả lời này! Không phân biệt chữ hoa/thường.
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>
+                                {% if current_question %}Cập nhật{% else %}Thiết lập{% endif %} câu hỏi bảo mật
+                            </button>
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">Hủy</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

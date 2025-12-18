@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm phòng trọ - {{ nhatro.tennt }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-door-open me-2"></i>Thêm phòng trọ mới</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Nhà trọ:</strong> {{ nhatro.tennt }}<br>
+                        <strong>Địa chỉ:</strong> {{ nhatro.diachi }}
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Lưu ý:</strong> Phòng trọ mới sẽ được Admin duyệt trước khi hiển thị công khai.
+                    </div>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="tenpt" class="form-label">Tên phòng <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="tenpt" name="tenpt"
+                                   placeholder="Ví dụ: Phòng 101, Phòng trọ A1..." required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="giatien" class="form-label">Giá thuê (VNĐ/tháng) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="giatien" name="giatien"
+                                       placeholder="Ví dụ: 3000000" required min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="dientich" class="form-label">Diện tích (m²)</label>
+                                <input type="number" step="0.1" class="form-control" id="dientich" name="dientich"
+                                       placeholder="Ví dụ: 20" min="0">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="songuoio" class="form-label">Số người ở tối đa</label>
+                            <input type="number" class="form-control" id="songuoio" name="songuoio"
+                                   value="2" min="1" max="10">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="mota" class="form-label">Mô tả phòng</label>
+                            <textarea class="form-control" id="mota" name="mota" rows="4"
+                                      placeholder="Mô tả về phòng: tiện nghi, nội thất..."></textarea>
+                        </div>
+
+                        <!-- Image Upload Section -->
+                        <div class="card mb-4 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <i class="fas fa-images me-2"></i>Hình ảnh phòng trọ
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="images" class="form-label fw-bold">
+                                        Tải lên hình ảnh <span class="text-muted">(tối đa 5 ảnh, mỗi ảnh tối đa 5MB)</span>
+                                    </label>
+                                    <input type="file" class="form-control form-control-lg" id="images" name="images"
+                                           accept=".jpg,.jpeg,.png,.gif,.webp" multiple>
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Chấp nhận: JPG, PNG, GIF, WebP. Giữ Ctrl để chọn nhiều ảnh.
+                                    </div>
+                                </div>
+
+                                <!-- Drag & Drop Zone -->
+                                <div id="dropZone" class="border border-2 border-dashed rounded p-4 text-center mb-3"
+                                     style="border-color: #ccc; cursor: pointer;">
+                                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">Kéo thả ảnh vào đây hoặc click để chọn</p>
+                                </div>
+
+                                <!-- Image Preview -->
+                                <div id="imagePreview" class="row g-2"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Gửi duyệt phòng trọ
+                            </button>
+                            <a href="{% url 'bookings:manage_phongtro' nhatro_id=nhatro.mant %}" class="btn btn-outline-secondary">
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const fileInput = document.getElementById('images');
+const dropZone = document.getElementById('dropZone');
+const preview = document.getElementById('imagePreview');
+
+// Click on drop zone triggers file input
+dropZone.addEventListener('click', () => fileInput.click());
+
+// Drag and drop handling
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#0d6efd';
+    dropZone.style.backgroundColor = '#e7f1ff';
+});
+
+dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#ccc';
+    dropZone.style.backgroundColor = '';
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.style.borderColor = '#ccc';
+    dropZone.style.backgroundColor = '';
+
+    const files = e.dataTransfer.files;
+    fileInput.files = files;
+    showPreview(files);
+});
+
+// File input change
+fileInput.addEventListener('change', function(e) {
+    showPreview(e.target.files);
+});
+
+function showPreview(files) {
+    preview.innerHTML = '';
+
+    if (files.length > 5) {
+        alert('Chỉ được upload tối đa 5 ảnh. Chỉ 5 ảnh đầu tiên sẽ được sử dụng.');
+    }
+
+    for (let i = 0; i < Math.min(files.length, 5); i++) {
+        const file = files[i];
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const col = document.createElement('div');
+                col.className = 'col-4 col-md-2';
+                col.innerHTML = `
+                    <div class="position-relative">
+                        <img src="${e.target.result}" class="img-thumbnail w-100" style="height: 80px; object-fit: cover;">
+                        <span class="badge bg-primary position-absolute top-0 start-0 m-1">${i+1}</span>
+                    </div>
+                `;
+                preview.appendChild(col);
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    // Update drop zone text
+    if (files.length > 0) {
+        dropZone.innerHTML = `
+            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+            <p class="text-success mb-0"><strong>${Math.min(files.length, 5)} ảnh đã chọn</strong></p>
+            <small class="text-muted">Click để chọn lại</small>
+        `;
+    }
+}
+</script>
+{% endblock %}
+

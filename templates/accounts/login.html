@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đăng nhập - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center align-items-center min-vh-75">
+        <div class="col-lg-5 col-md-7">
+            <div class="text-center mb-4">
+                <a href="{% url 'rooms:home' %}" class="text-decoration-none">
+                    <h2 class="fw-bold text-primary">🏠 PhongTro.vn</h2>
+                </a>
+                <p class="text-muted">Đăng nhập để tiếp tục</p>
+            </div>
+
+            <div class="card shadow border-0">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="text-center mb-4">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 70px; height: 70px;">
+                            <i class="fas fa-sign-in-alt fa-2x text-primary"></i>
+                        </div>
+                        <h4 class="fw-bold">Chào mừng trở lại!</h4>
+                    </div>
+
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if is_throttled %}
+                    <div class="alert alert-danger border-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-danger bg-opacity-10 rounded-circle p-2 me-3">
+                                <i class="fas fa-lock text-danger"></i>
+                            </div>
+                            <div>
+                                <strong>Tài khoản bị khóa tạm thời!</strong><br>
+                                <small>Quá nhiều lần đăng nhập thất bại. Thử lại sau <span id="countdown" class="fw-bold">{{ remaining_seconds }}</span> giây.</small>
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                        let seconds = {{ remaining_seconds }};
+                        const countdown = document.getElementById('countdown');
+                        const interval = setInterval(() => {
+                            seconds--;
+                            if (seconds <= 0) {
+                                clearInterval(interval);
+                                location.reload();
+                            } else {
+                                const mins = Math.floor(seconds / 60);
+                                const secs = seconds % 60;
+                                countdown.textContent = mins > 0 ? `${mins} phút ${secs}` : secs;
+                            }
+                        }, 1000);
+                    </script>
+                    {% endif %}
+
+                    <form method="post" action="{% url 'accounts:login' %}" {% if is_throttled %}style="opacity: 0.5; pointer-events: none;"{% endif %}>
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium">
+                                <i class="fas fa-envelope me-1 text-muted"></i>Email
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-at text-muted"></i></span>
+                                <input type="email" name="email" class="form-control border-start-0" placeholder="name@example.com" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <label class="form-label fw-medium mb-0">
+                                    <i class="fas fa-lock me-1 text-muted"></i>Mật khẩu
+                                </label>
+                                <a href="{% url 'password_reset' %}" class="small text-primary text-decoration-none">Quên mật khẩu?</a>
+                            </div>
+                            <div class="input-group mt-2">
+                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-key text-muted"></i></span>
+                                <input type="password" name="password" class="form-control border-start-0" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        {% if require_captcha %}
+                        <div class="mb-3">
+                            <div class="g-recaptcha" data-sitekey="YOUR_SITE_KEY"></div>
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid mb-4">
+                            <button type="submit" class="btn btn-primary btn-lg" {% if is_throttled %}disabled{% endif %}>
+                                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                            </button>
+                        </div>
+
+                        <div class="d-flex align-items-center mb-4">
+                            <hr class="flex-grow-1">
+                            <span class="px-3 text-muted small">hoặc</span>
+                            <hr class="flex-grow-1">
+                        </div>
+
+                        <div class="text-center">
+                            <p class="mb-0">Chưa có tài khoản?
+                                <a href="{% url 'accounts:register' %}" class="fw-bold text-primary text-decoration-none">Đăng ký ngay</a>
+                            </p>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Security Notice -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-shield-alt text-success me-1"></i>
+                    Kết nối an toàn với mã hóa SSL
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

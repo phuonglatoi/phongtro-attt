@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Đánh giá phòng - {{ room.tenpt }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-star me-2"></i>Đánh giá phòng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Phòng:</strong> {{ room.tenpt }}<br>
+                        <strong>Nhà trọ:</strong> {{ room.mant.tennt }}
+                    </div>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label">Đánh giá sao</label>
+                            <div class="btn-group d-flex" role="group">
+                                {% for i in "12345" %}
+                                <input type="radio" class="btn-check" name="sao" id="star{{ i }}" value="{{ i }}" 
+                                       {% if i == "5" %}checked{% endif %}>
+                                <label class="btn btn-outline-warning" for="star{{ i }}">
+                                    {{ i }} <i class="fas fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="binhluan" class="form-label">Nhận xét của bạn</label>
+                            <textarea class="form-control" id="binhluan" name="binhluan" rows="5" 
+                                      placeholder="Chia sẻ trải nghiệm của bạn về phòng này..."></textarea>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Gửi đánh giá
+                            </button>
+                            <a href="{% url 'rooms:room_detail' pk=room.mapt %}" class="btn btn-outline-secondary">
+                                Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

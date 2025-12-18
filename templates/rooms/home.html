@@ -1,0 +1,236 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section position-relative overflow-hidden">
+    <div class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-4 mb-lg-0">
+                <span class="badge bg-warning text-dark mb-3 px-3 py-2">
+                    <i class="fas fa-star me-1"></i> Nền tảng #1 Việt Nam
+                </span>
+                <h1 class="display-4 fw-bold mb-4 text-white">Tìm phòng trọ <span class="text-warning">hoàn hảo</span> cho bạn</h1>
+                <p class="lead mb-4 opacity-75">Hàng nghìn phòng trọ chất lượng, giá tốt, an toàn và bảo mật thông tin. Kết nối trực tiếp với chủ trọ đã xác thực.</p>
+
+                <form action="{% url 'rooms:search' %}" method="GET" class="mb-4">
+                    <div class="input-group input-group-lg shadow-lg">
+                        <span class="input-group-text bg-white border-0"><i class="fas fa-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control border-0" placeholder="Tìm kiếm theo tên, địa chỉ..." required>
+                        <button type="submit" class="btn btn-warning px-4 fw-bold">
+                            Tìm kiếm
+                        </button>
+                    </div>
+                </form>
+
+                <div class="d-flex gap-4 text-white-50">
+                    <div><i class="fas fa-check-circle text-success me-2"></i>Miễn phí 100%</div>
+                    <div><i class="fas fa-check-circle text-success me-2"></i>Chủ trọ xác thực</div>
+                    <div><i class="fas fa-check-circle text-success me-2"></i>Bảo mật cao</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=600&h=400&fit=crop"
+                         alt="Phòng trọ đẹp" class="img-fluid rounded-4 shadow-lg">
+                    <!-- Floating Stats -->
+                    <div class="position-absolute bg-white rounded-3 shadow-lg p-3" style="bottom: -20px; left: -20px;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-home fa-lg text-success"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-bold">1000+</h5>
+                                <small class="text-muted">Phòng trọ</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="position-absolute bg-white rounded-3 shadow-lg p-3" style="top: -20px; right: -20px;">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-users fa-lg text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-bold">500+</h5>
+                                <small class="text-muted">Chủ trọ</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Rooms Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 mb-3">Khám phá ngay</span>
+            <h2 class="section-title display-6">Phòng trọ nổi bật</h2>
+            <p class="section-subtitle">Những phòng trọ chất lượng được nhiều người quan tâm</p>
+        </div>
+        <div class="row g-4">
+            {% for room in featured_rooms %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card card-room shadow h-100">
+                    <div class="position-relative overflow-hidden">
+                        {% if room.first_image %}
+                        <img src="{{ room.first_image.duongdan }}" class="card-img-top room-image" alt="{{ room.tenpt }}">
+                        {% else %}
+                        <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=220&fit=crop" class="card-img-top room-image" alt="{{ room.tenpt }}">
+                        {% endif %}
+                        <span class="badge bg-success position-absolute shadow-sm" style="top: 12px; left: 12px;">
+                            <i class="fas fa-check-circle me-1"></i>Còn trống
+                        </span>
+                        <span class="price-badge">
+                            {{ room.giatien|floatformat:0 }} VNĐ
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold mb-2">{{ room.tenpt }}</h5>
+                        <p class="card-text text-muted small mb-3">
+                            <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                            {{ room.mant.diachi|truncatewords:8 }}
+                        </p>
+                        <div class="d-flex gap-2 mb-3">
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-expand-arrows-alt me-1 text-primary"></i>{{ room.dientich|default:"--" }} m²
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="fas fa-users me-1 text-primary"></i>{{ room.songuoio|default:0 }} người
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-white border-top-0 pt-0">
+                        <a href="{% url 'rooms:room_detail' pk=room.mapt %}" class="btn btn-primary w-100">
+                            <i class="fas fa-eye me-2"></i>Xem chi tiết
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 100px; height: 100px;">
+                        <i class="fas fa-home fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="text-muted">Chưa có phòng trọ nào</h5>
+                    <p class="text-muted mb-4">Hãy quay lại sau hoặc trở thành chủ trọ để đăng tin!</p>
+                    {% if request.session.user_role == 'Chủ trọ' %}
+                    <a href="{% url 'bookings:create_nhatro' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>Đăng tin ngay
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        {% if featured_rooms %}
+        <div class="text-center mt-5">
+            <a href="{% url 'rooms:room_list' %}" class="btn btn-outline-primary btn-lg px-5">
+                Xem tất cả phòng trọ <i class="fas fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Why Choose Us Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 mb-3">Tại sao chọn chúng tôi</span>
+            <h2 class="section-title display-6">Ưu điểm vượt trội</h2>
+            <p class="section-subtitle">Lý do hàng nghìn người tin tưởng sử dụng PhongTro.vn</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                            <i class="fas fa-shield-alt fa-2x text-primary"></i>
+                        </div>
+                        <h4 class="fw-bold">Bảo mật cao</h4>
+                        <p class="text-muted mb-0">Xác thực 2 yếu tố (2FA), mã hóa SSL, bảo vệ tuyệt đối dữ liệu cá nhân của bạn.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                            <i class="fas fa-user-check fa-2x text-success"></i>
+                        </div>
+                        <h4 class="fw-bold">Chủ trọ xác thực</h4>
+                        <p class="text-muted mb-0">Tất cả chủ trọ đều được xác thực danh tính, đảm bảo uy tín và tin cậy.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm h-100 text-center p-4">
+                    <div class="card-body">
+                        <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-4" style="width: 80px; height: 80px;">
+                            <i class="fas fa-headset fa-2x text-info"></i>
+                        </div>
+                        <h4 class="fw-bold">Hỗ trợ 24/7</h4>
+                        <p class="text-muted mb-0">Đội ngũ hỗ trợ chuyên nghiệp sẵn sàng giải đáp mọi thắc mắc của bạn.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 bg-white">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2 mb-3">Đơn giản & Nhanh chóng</span>
+            <h2 class="section-title display-6">Cách thức hoạt động</h2>
+            <p class="section-subtitle">Chỉ với 3 bước đơn giản để tìm phòng trọ lý tưởng</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="position-relative mb-4">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">1</div>
+                </div>
+                <h5 class="fw-bold">Tìm kiếm</h5>
+                <p class="text-muted">Nhập địa điểm, khu vực mong muốn để tìm phòng trọ phù hợp</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="position-relative mb-4">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">2</div>
+                </div>
+                <h5 class="fw-bold">Liên hệ</h5>
+                <p class="text-muted">Nhắn tin hoặc đặt lịch xem phòng trực tiếp với chủ trọ</p>
+            </div>
+            <div class="col-md-4 text-center">
+                <div class="position-relative mb-4">
+                    <div class="bg-warning text-dark rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 1.5rem; font-weight: bold;">3</div>
+                </div>
+                <h5 class="fw-bold">Thuê phòng</h5>
+                <p class="text-muted">Xem phòng, thỏa thuận và ký hợp đồng thuê phòng</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container text-center text-white py-4">
+        <h2 class="display-6 fw-bold mb-3">Sẵn sàng tìm phòng trọ?</h2>
+        <p class="lead mb-4 opacity-75">Đăng ký ngay để nhận thông báo về phòng trọ mới nhất</p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="{% url 'rooms:room_list' %}" class="btn btn-warning btn-lg px-5 fw-bold">
+                <i class="fas fa-search me-2"></i>Tìm phòng ngay
+            </a>
+            {% if not request.session.is_authenticated %}
+            <a href="{% url 'accounts:register' %}" class="btn btn-outline-light btn-lg px-5">
+                <i class="fas fa-user-plus me-2"></i>Đăng ký miễn phí
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

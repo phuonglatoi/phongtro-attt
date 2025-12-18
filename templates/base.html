@@ -1,0 +1,431 @@
+{% load static %}<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="PhongTro.vn - Nền tảng tìm phòng trọ uy tín, an toàn và bảo mật hàng đầu Việt Nam">
+    <meta name="keywords" content="phòng trọ, thuê phòng, nhà trọ, cho thuê phòng, tìm phòng trọ">
+
+    <meta http-equiv="Content-Security-Policy" content="{{ CSP_POLICY }}">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+
+    <title>{% block title %}PhongTro.vn - Tìm phòng trọ uy tín{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    {% block extra_css %}{% endblock %}
+
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --primary-dark: #0a58ca;
+            --secondary-color: #6c757d;
+            --success-color: #198754;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-bg: #f8f9fa;
+            --dark-bg: #212529;
+            --gradient-primary: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            --gradient-hero: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 40px rgba(0,0,0,0.15);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--light-bg);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            box-shadow: var(--shadow-sm);
+            padding: 0.8rem 0;
+            background: white !important;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color) !important;
+        }
+        .navbar-brand:hover { color: var(--primary-dark) !important; }
+        .nav-link {
+            font-weight: 500;
+            color: #555 !important;
+            padding: 0.5rem 1rem !important;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+            background: rgba(13, 110, 253, 0.08);
+        }
+        .nav-link i { margin-right: 0.3rem; }
+        .dropdown-menu {
+            border: none;
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--border-radius);
+            padding: 0.5rem;
+        }
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            font-weight: 500;
+        }
+        .dropdown-item:hover { background: var(--light-bg); }
+
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        .card-room {
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: none;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        .card-room:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-lg);
+        }
+        .card-header {
+            background: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: 600;
+        }
+
+        /* Room Image Styles */
+        .room-image { height: 220px; object-fit: cover; }
+        .room-placeholder {
+            height: 220px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        /* Badge Styles */
+        .badge {
+            font-weight: 500;
+            padding: 0.5em 0.8em;
+            border-radius: 6px;
+        }
+        .price-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* Button Styles */
+        .btn {
+            font-weight: 500;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            transition: var(--transition);
+        }
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+        }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-outline-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Form Styles */
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 0.7rem 1rem;
+            border: 1px solid #dee2e6;
+            transition: var(--transition);
+        }
+        .form-control:focus, .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+            border-color: var(--primary-color);
+        }
+        .form-label { font-weight: 500; color: #555; }
+
+        /* Alert Styles */
+        .alert {
+            border: none;
+            border-radius: var(--border-radius);
+            font-weight: 500;
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: var(--dark-bg);
+            color: #adb5bd;
+        }
+        .footer h5 { color: white; font-weight: 600; }
+        .footer a {
+            color: #adb5bd;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+        .footer a:hover { color: white; }
+        .footer-links li { margin-bottom: 0.5rem; }
+        .social-icons a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            transition: var(--transition);
+        }
+        .social-icons a:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        /* Section Styles */
+        .section-title {
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 1rem;
+        }
+        .section-subtitle {
+            color: var(--secondary-color);
+            margin-bottom: 2rem;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            background: var(--gradient-hero);
+            color: white;
+            padding: 4rem 0;
+        }
+
+        /* Utility Classes */
+        .text-gradient {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .bg-gradient-primary { background: var(--gradient-primary); }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-brand { font-size: 1.2rem; }
+            .hero-section { padding: 2rem 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'rooms:home' %}">🏠 PhongTro.vn</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'rooms:room_list' %}">Tìm phòng</a></li>
+
+                    {% if request.session.is_authenticated %}
+                        {% if request.session.user_role == 'Admin' %}
+                        <li class="nav-item"><a class="nav-link text-danger" href="{% url 'bookings:admin_dashboard' %}">
+                            <i class="fas fa-cog"></i> Admin
+                        </a></li>
+                        {% elif request.session.user_role == 'Chủ trọ' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'bookings:landlord_dashboard' %}">
+                            <i class="fas fa-home"></i> Quản lý
+                        </a></li>
+                        {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'bookings:request_landlord' %}">
+                            Đăng tin
+                        </a></li>
+                        {% endif %}
+
+                        <!-- Notifications -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'bookings:notifications' %}">
+                                <i class="fas fa-bell"></i>
+                            </a>
+                        </li>
+
+                        <!-- Messages -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'bookings:inbox' %}">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user-circle"></i> {{ request.session.user_name }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                    <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'bookings:my_bookings' %}">
+                                    <i class="fas fa-calendar me-2"></i>Lịch hẹn của tôi
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:manage_devices' %}">
+                                    <i class="fas fa-laptop me-2"></i>Thiết bị đăng nhập
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:setup_2fa' %}">
+                                    <i class="fas fa-shield-alt me-2"></i>Bảo mật 2FA
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}">
+                                    <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                                </a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'accounts:login' %}">Đăng nhập</a></li>
+                        <li class="nav-item ms-2"><a class="btn btn-primary btn-sm" href="{% url 'accounts:register' %}">Đăng ký</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    {% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <footer class="footer mt-5 pt-5 pb-4">
+        <div class="container">
+            <div class="row g-4">
+                <!-- Brand & Description -->
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="mb-3">🏠 PhongTro.vn</h5>
+                    <p class="small mb-3">Nền tảng tìm phòng trọ uy tín, an toàn và bảo mật hàng đầu Việt Nam. Kết nối chủ trọ và người thuê một cách nhanh chóng, tiện lợi.</p>
+                    <div class="social-icons">
+                        <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" title="Zalo"><i class="fas fa-comment-dots"></i></a>
+                        <a href="#" title="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="#" title="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="col-lg-2 col-md-6">
+                    <h5 class="mb-3">Khám phá</h5>
+                    <ul class="list-unstyled footer-links small">
+                        <li><a href="{% url 'rooms:room_list' %}"><i class="fas fa-angle-right me-1"></i> Tìm phòng trọ</a></li>
+                        <li><a href="{% url 'rooms:home' %}"><i class="fas fa-angle-right me-1"></i> Phòng nổi bật</a></li>
+                        <li><a href="#"><i class="fas fa-angle-right me-1"></i> Hướng dẫn thuê</a></li>
+                        <li><a href="#"><i class="fas fa-angle-right me-1"></i> Blog & Tips</a></li>
+                    </ul>
+                </div>
+
+                <!-- Policies -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="mb-3">Chính sách</h5>
+                    <ul class="list-unstyled footer-links small">
+                        <li><a href="{% url 'rooms:terms' %}"><i class="fas fa-angle-right me-1"></i> Điều khoản sử dụng</a></li>
+                        <li><a href="{% url 'rooms:privacy' %}"><i class="fas fa-angle-right me-1"></i> Chính sách bảo mật</a></li>
+                        <li><a href="{% url 'rooms:policies' %}"><i class="fas fa-angle-right me-1"></i> Quy định đăng tin</a></li>
+                        <li><a href="{% url 'rooms:contact' %}"><i class="fas fa-angle-right me-1"></i> Liên hệ & Hỗ trợ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact & Security -->
+                <div class="col-lg-3 col-md-6">
+                    <h5 class="mb-3">Liên hệ</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><i class="fas fa-envelope me-2 text-primary"></i> support@phongtro.vn</li>
+                        <li class="mb-2"><i class="fas fa-phone me-2 text-success"></i> 1900-xxxx</li>
+                        <li class="mb-2"><i class="fas fa-map-marker-alt me-2 text-danger"></i> TP. Hồ Chí Minh, Việt Nam</li>
+                    </ul>
+                    <div class="mt-3 p-3 rounded" style="background: rgba(255,255,255,0.05);">
+                        <p class="small mb-2 text-white"><i class="fas fa-shield-alt text-success me-2"></i>Bảo mật cao</p>
+                        <p class="small mb-0" style="font-size: 0.75rem;">
+                            <i class="fas fa-check text-success me-1"></i> 2FA Authentication<br>
+                            <i class="fas fa-check text-success me-1"></i> SSL Encryption<br>
+                            <i class="fas fa-check text-success me-1"></i> Privacy Protected
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border-color: rgba(255,255,255,0.1);" class="my-4">
+
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center text-md-start">
+                    <p class="small mb-0">© 2024 PhongTro.vn. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <p class="small mb-0">
+                        <a href="{% url 'rooms:terms' %}" class="me-3">Điều khoản</a>
+                        <a href="{% url 'rooms:privacy' %}" class="me-3">Bảo mật</a>
+                        <a href="{% url 'rooms:contact' %}">Liên hệ</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>const csrftoken = '{{ csrf_token }}';</script>
+    {% block extra_js %}{% endblock %}
+    <script src="{% static 'js/utils.js' %}"></script>
+<script src="{% static 'js/security.js' %}"></script>
+<script src="{% static 'js/form-validation.js' %}"></script>
+<script src="{% static 'js/notifications.js' %}"></script>
+<script src="{% static 'js/captcha.js' %}"></script>
+</body>
+</html>

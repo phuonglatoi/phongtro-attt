@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Thông tin cá nhân - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                    <h5>{{ khachhang.hoten }}</h5>
+
+                    <!-- Role Badge -->
+                    {% if request.session.user_role == 'Admin' %}
+                        <span class="badge bg-danger fs-6">
+                            <i class="fas fa-crown me-1"></i>Admin
+                        </span>
+                    {% elif request.session.user_role == 'Chủ trọ' %}
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-home me-1"></i>Chủ trọ
+                        </span>
+                    {% else %}
+                        <span class="badge bg-info fs-6">
+                            <i class="fas fa-user me-1"></i>Khách hàng
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mt-3 shadow-sm">
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'accounts:profile' %}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-user me-2"></i>Thông tin
+                    </a>
+                    <a href="{% url 'bookings:my_bookings' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-calendar me-2"></i>Lịch hẹn
+                    </a>
+                    <a href="{% url 'bookings:inbox' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-envelope me-2"></i>Tin nhắn
+                    </a>
+                    <a href="{% url 'accounts:password_change' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                    </a>
+                    <a href="{% url 'accounts:manage_devices' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-mobile-alt me-2"></i>Thiết bị
+                    </a>
+                    <a href="{% url 'accounts:setup_2fa' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shield-alt me-2"></i>Bảo mật 2FA
+                    </a>
+                    <a href="{% url 'accounts:setup_security_question' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-question-circle me-2"></i>Câu hỏi bảo mật
+                    </a>
+                </div>
+            </div>
+
+            <!-- Landlord/Admin Quick Links -->
+            {% if request.session.user_role == 'Chủ trọ' %}
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <i class="fas fa-home me-2"></i>Quản lý chủ trọ
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'bookings:landlord_dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                    </a>
+                    <a href="{% url 'bookings:manage_nhatro' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-building me-2"></i>Nhà trọ
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if request.session.user_role == 'Admin' %}
+            <div class="card mt-3 shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <i class="fas fa-cog me-2"></i>Quản trị
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="{% url 'bookings:admin_dashboard' %}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                    </a>
+                    <a href="/admin/" class="list-group-item list-group-item-action">
+                        <i class="fas fa-database me-2"></i>Django Admin
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-md-9">
+            <!-- Request Landlord Card (for Customers only) -->
+            {% if request.session.user_role == 'Khách hàng' or not request.session.user_role %}
+            <div class="card shadow-sm mb-4 border-success">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h5 class="text-success mb-2">
+                                <i class="fas fa-home me-2"></i>Bạn muốn cho thuê phòng?
+                            </h5>
+                            <p class="text-muted mb-0">
+                                Đăng ký trở thành chủ trọ để đăng tin cho thuê phòng miễn phí!
+                            </p>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{% url 'bookings:request_landlord' %}" class="btn btn-success btn-lg">
+                                <i class="fas fa-paper-plane me-2"></i>Đăng ký ngay
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Profile Info Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h4 class="mb-0"><i class="fas fa-user me-2"></i>Thông tin cá nhân</h4>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="30%"><i class="fas fa-user text-muted me-2"></i>Họ tên:</th>
+                            <td><strong>{{ khachhang.hoten }}</strong></td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-envelope text-muted me-2"></i>Email:</th>
+                            <td>{{ khachhang.email }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-phone text-muted me-2"></i>Số điện thoại:</th>
+                            <td>{{ khachhang.sdt|default:"Chưa cập nhật" }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-map-marker-alt text-muted me-2"></i>Địa chỉ:</th>
+                            <td>{{ khachhang.diachi|default:"Chưa cập nhật" }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-id-card text-muted me-2"></i>CCCD:</th>
+                            <td>{{ khachhang.cccd|default:"Chưa cập nhật" }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-user-tag text-muted me-2"></i>Vai trò:</th>
+                            <td>
+                                {% if request.session.user_role == 'Admin' %}
+                                    <span class="badge bg-danger">Admin</span>
+                                {% elif request.session.user_role == 'Chủ trọ' %}
+                                    <span class="badge bg-success">Chủ trọ</span>
+                                {% else %}
+                                    <span class="badge bg-info">Khách hàng</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-shield-alt text-muted me-2"></i>Xác thực 2FA:</th>
+                            <td>
+                                {% if khachhang.is_2fa_enabled %}
+                                    <span class="badge bg-success"><i class="fas fa-check me-1"></i>Đã bật</span>
+                                {% else %}
+                                    <span class="badge bg-warning"><i class="fas fa-exclamation me-1"></i>Chưa bật</span>
+                                    <a href="{% url 'accounts:setup_2fa' %}" class="btn btn-sm btn-outline-primary ms-2">Bật ngay</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><i class="fas fa-calendar text-muted me-2"></i>Ngày tạo:</th>
+                            <td>{{ khachhang.tg_tao|date:"d/m/Y H:i"|default:"N/A" }}</td>
+                        </tr>
+                    </table>
+
+                    <div class="mt-3">
+                        <a href="{% url 'accounts:edit_profile' %}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Chỉnh sửa thông tin
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login History -->
+            {% if login_history %}
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Lịch sử đăng nhập gần đây</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Thời gian</th>
+                                    <th>IP</th>
+                                    <th>Thiết bị</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in login_history %}
+                                <tr>
+                                    <td>{{ log.timestamp|date:"d/m/Y H:i" }}</td>
+                                    <td><code>{{ log.ip_address }}</code></td>
+                                    <td>{{ log.device_type|default:"Unknown" }} - {{ log.browser_family|default:"Unknown" }}</td>
+                                    <td>
+                                        {% if log.success %}
+                                            <span class="badge bg-success">Thành công</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Thất bại</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

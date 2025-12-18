@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Thêm nhà trọ mới{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-building me-2"></i>Thêm nhà trọ mới</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="tennt" class="form-label">Tên nhà trọ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="tennt" name="tennt" 
+                                   placeholder="Ví dụ: Nhà trọ Bình Minh" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="diachi" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="diachi" name="diachi"
+                                   placeholder="Ví dụ: 123 Đường ABC, Quận 1, TP.HCM" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="giadien" class="form-label">Giá điện (VNĐ/kWh)</label>
+                                <input type="number" class="form-control" id="giadien" name="giadien" 
+                                       value="3500" min="0">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="gianuoc" class="form-label">Giá nước (VNĐ/m³)</label>
+                                <input type="number" class="form-control" id="gianuoc" name="gianuoc" 
+                                       value="15000" min="0">
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Lưu nhà trọ
+                            </button>
+                            <a href="{% url 'bookings:manage_nhatro' %}" class="btn btn-outline-secondary">
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

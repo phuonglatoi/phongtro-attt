@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-body">
+            <h3 class="mb-4">Đăng tin phòng trọ</h3>
+            
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label>Nhà trọ</label>
+                    {{ form.nha_tro }}
+                </div>
+                
+                <div class="mb-3">
+                    <label>Tên phòng</label>
+                    {{ form.ten_phong }}
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label>Diện tích</label>
+                            {{ form.dien_tich }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label>Số người ở</label>
+                            {{ form.so_nguoi_o }}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label>Giá tiền (VNĐ/tháng)</label>
+                    {{ form.gia_tien }}
+                </div>
+                
+                <div class="mb-3">
+                    <label>Mô tả</label>
+                    {{ form.mo_ta }}
+                </div>
+                
+                <div class="mb-3">
+                    <label>Hình ảnh</label>
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                        <div class="mb-2">
+                            {{ form.duong_dan }}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Đăng tin</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

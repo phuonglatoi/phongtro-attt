@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block title %}Chỉnh sửa thông tin - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user-edit me-2"></i>Chỉnh sửa thông tin cá nhân</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="hoten" class="form-label">Họ tên <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="hoten" name="hoten" 
+                                   value="{{ khachhang.hoten }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" 
+                                   value="{{ khachhang.email }}" disabled>
+                            <div class="form-text">Email không thể thay đổi</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="sdt" class="form-label">Số điện thoại</label>
+                            <input type="tel" class="form-control" id="sdt" name="sdt" 
+                                   value="{{ khachhang.sdt|default:'' }}" 
+                                   placeholder="Ví dụ: 0912345678">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="diachi" class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" id="diachi" name="diachi" 
+                                   value="{{ khachhang.diachi|default:'' }}"
+                                   placeholder="Ví dụ: 123 Đường ABC, Quận 1, TP.HCM">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="cccd" class="form-label">CMND/CCCD</label>
+                            <input type="text" class="form-control" id="cccd" name="cccd" 
+                                   value="{{ khachhang.cccd|default:'' }}"
+                                   placeholder="Số CMND hoặc CCCD">
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                            <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                                Hủy
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
