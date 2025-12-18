@@ -106,11 +106,14 @@ CSP_FRAME_SRC = (
 CSP_CONNECT_SRC = ("'self'", "https://www.google-analytics.com")
 
 # ============================================
-# 🤖 GOOGLE reCAPTCHA v3
+# 🤖 GOOGLE reCAPTCHA v3 (Optional)
 # ============================================
-RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY')
-RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY')
+RECAPTCHA_PUBLIC_KEY = config('RECAPTCHA_PUBLIC_KEY', default='')
+RECAPTCHA_PRIVATE_KEY = config('RECAPTCHA_PRIVATE_KEY', default='')
 RECAPTCHA_REQUIRED_SCORE = 0.5  # Điểm ngưỡng (0.0 - 1.0)
+
+# Flag to check if reCAPTCHA is configured
+RECAPTCHA_ENABLED = bool(RECAPTCHA_PUBLIC_KEY and RECAPTCHA_PRIVATE_KEY)
 
 # Khi nào bắt buộc CAPTCHA
 CAPTCHA_REQUIRED_FOR = [
@@ -132,24 +135,31 @@ MANDATORY_2FA_ROLES = ['admin', 'moderator']
 BACKUP_CODES_COUNT = 10
 
 # ============================================
-# 🌐 GOOGLE OAUTH 2.0
+# 🌐 GOOGLE OAUTH 2.0 (Optional)
 # ============================================
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        },
-        'APP': {
-            'client_id': config('GOOGLE_OAUTH_CLIENT_ID'),
-            'secret': config('GOOGLE_OAUTH_CLIENT_SECRET'),
-            'key': ''
+GOOGLE_OAUTH_CLIENT_ID = config('GOOGLE_OAUTH_CLIENT_ID', default='')
+GOOGLE_OAUTH_CLIENT_SECRET = config('GOOGLE_OAUTH_CLIENT_SECRET', default='')
+
+# Only configure OAuth if credentials are provided
+if GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET:
+    SOCIALACCOUNT_PROVIDERS = {
+        'google': {
+            'SCOPE': [
+                'profile',
+                'email',
+            ],
+            'AUTH_PARAMS': {
+                'access_type': 'online',
+            },
+            'APP': {
+                'client_id': GOOGLE_OAUTH_CLIENT_ID,
+                'secret': GOOGLE_OAUTH_CLIENT_SECRET,
+                'key': ''
+            }
         }
     }
-}
+else:
+    SOCIALACCOUNT_PROVIDERS = {}
 
 # Django-allauth settings
 ACCOUNT_EMAIL_REQUIRED = True

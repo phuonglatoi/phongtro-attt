@@ -90,30 +90,41 @@ def get_geolocation(ip_address):
 
 
 def verify_recaptcha(token):
+    """
+    Verify reCAPTCHA token. Returns True if:
+    - reCAPTCHA is not configured (optional feature)
+    - Token is valid and score meets threshold
+    """
+    # If reCAPTCHA is not configured, skip verification
+    secret_key = getattr(settings, 'RECAPTCHA_PRIVATE_KEY', '')
+    if not secret_key:
+        return True
+
     if not token:
         return False
-    
+
     try:
         response = requests.post(
             'https://www.google.com/recaptcha/api/siteverify',
             data={
-                'secret': settings.RECAPTCHA_PRIVATE_KEY,
+                'secret': secret_key,
                 'response': token
             },
             timeout=5
         )
-        
+
         result = response.json()
-        
+
         if result.get('success'):
             score = result.get('score', 0)
-            return score >= settings.RECAPTCHA_REQUIRED_SCORE
-        
+            required_score = getattr(settings, 'RECAPTCHA_REQUIRED_SCORE', 0.5)
+            return score >= required_score
+
         return False
-    
+
     except Exception as e:
         logger.error(f"Error verifying reCAPTCHA: {e}")
-        return False
+        return True  # Allow if verification fails (connection error)
 
 
 def send_security_alert_email(khachhang, alert_type, context=None):
