@@ -100,18 +100,16 @@ def create_henxem(request, room_id):
 
 @login_required_custom
 def my_bookings(request):
-    """Danh sách lịch hẹn và hợp đồng thuê của người dùng"""
+    """Danh sách lịch hẹn xem phòng của người dùng"""
     khachhang = get_current_khachhang(request)
 
     if not khachhang:
         return redirect('accounts:login')
 
     henxem_list = Henxemtro.objects.filter(makh=khachhang).select_related('mapt', 'mapt__mant')
-    thuetro_list = Thuetro.objects.filter(makh=khachhang).select_related('mapt', 'mapt__mant')
 
     return render(request, 'bookings/my_bookings.html', {
-        'henxem_list': henxem_list,
-        'thuetro_list': thuetro_list
+        'henxem_list': henxem_list
     })
 
 
@@ -138,17 +136,23 @@ def cancel_henxem(request, pk):
 @login_required_custom
 @ratelimit(key='ip', rate='5/h', method='POST')
 def create_review(request, room_id):
-    """Tạo đánh giá phòng trọ"""
+    """Tạo đánh giá phòng trọ - chỉ cho phép người đã đặt lịch hẹn được chấp nhận"""
     room = get_object_or_404(Phongtro, pk=room_id)
     khachhang = get_current_khachhang(request)
 
     if not khachhang:
         return redirect('accounts:login')
 
-    # Check if user has rented this room
-    has_rented = Thuetro.objects.filter(makh=khachhang, mapt=room).exists()
-    if not has_rented:
-        messages.error(request, 'Bạn chỉ có thể đánh giá phòng đã từng thuê.')
+    # Check if user has a confirmed/completed viewing appointment for this room
+    # Chỉ những ai đặt lịch hẹn đi xem phòng được chấp nhận mới được đánh giá
+    has_confirmed_viewing = Henxemtro.objects.filter(
+        makh=khachhang,
+        mapt=room,
+        trangthai__in=['Đã xác nhận', 'Đã xem']
+    ).exists()
+
+    if not has_confirmed_viewing:
+        messages.error(request, 'Bạn chỉ có thể đánh giá phòng đã đặt lịch hẹn xem và được chấp nhận.')
         return redirect('rooms:room_detail', pk=room_id)
 
     # Check if already reviewed
@@ -208,14 +212,53 @@ def inbox(request):
     })
 
 
+def validate_message_content_inline(content):
+    """
+    Validate nội dung tin nhắn:
+    - Không cho phép ký tự đặc biệt (trừ dấu câu tiếng Việt)
+    - Giới hạn 500 ký tự
+    """
+    import re
+
+    if not content:
+        return False, 'Vui lòng nhập nội dung tin nhắn.'
+
+    if len(content) > 500:
+        return False, 'Tin nhắn không được quá 500 ký tự.'
+
+    if len(content) < 2:
+        return False, 'Tin nhắn phải có ít nhất 2 ký tự.'
+
+    # Không cho phép: <, >, {, }, [, ], |, \, ^, ~, `, @, #, $, %, &, *, =, +
+    dangerous_chars = re.compile(r'[<>{}|\[\]\\^~`@#$%&*=+]')
+    if dangerous_chars.search(content):
+        return False, 'Tin nhắn không được chứa ký tự đặc biệt.'
+
+    return True, content
+
+
 @login_required_custom
 def conversation(request, partner_id):
-    """Cuộc hội thoại với một người"""
+    """Cuộc hội thoại với một người - chỉ cho phép nhắn tin với chủ trọ có phòng"""
     khachhang = get_current_khachhang(request)
     partner = get_object_or_404(Khachhang, pk=partner_id)
 
     if not khachhang:
         return redirect('accounts:login')
+
+    # Kiểm tra partner có phải là chủ trọ có phòng không
+    # Hoặc đã có cuộc hội thoại trước đó (để tiếp tục chat)
+    from apps.rooms.models import Nhatro
+    partner_has_rooms = Nhatro.objects.filter(makh=partner).exists()
+    has_existing_conversation = Tinnhan.objects.filter(
+        Q(makh_gui=khachhang, makh_nhan=partner) |
+        Q(makh_gui=partner, makh_nhan=khachhang)
+    ).exists()
+
+    # Chỉ cho phép nhắn tin nếu partner là chủ trọ có phòng hoặc đã có cuộc hội thoại
+    if not partner_has_rooms and not has_existing_conversation:
+        messages.error(request, 'Bạn chỉ có thể nhắn tin cho chủ trọ có phòng trọ.')
+        return redirect('bookings:inbox')
 
     # Get all messages between two people
     messages_list = Tinnhan.objects.filter(
@@ -227,24 +270,34 @@ def conversation(request, partner_id):
     Tinnhan.objects.filter(makh_gui=partner, makh_nhan=khachhang, dadoc=False).update(dadoc=True)
 
     if request.method == 'POST':
-        noidung = bleach.clean(request.POST.get('noidung', ''), strip=True)
+        noidung_raw = request.POST.get('noidung', '')
+        noidung_clean = bleach.clean(noidung_raw, strip=True)
 
-        if noidung:
-            Tinnhan.objects.create(
-                makh_gui=khachhang,
-                makh_nhan=partner,
-                noidung=noidung
-            )
+        # Validate nội dung tin nhắn
+        is_valid, result = validate_message_content_inline(noidung_clean)
+        if not is_valid:
+            messages.error(request, result)
+            return render(request, 'bookings/conversation.html', {
+                'partner': partner,
+                'messages_list': messages_list,
+                'noidung': noidung_raw
+            })
 
-            # Notify partner
-            create_notification(
-                partner,
-                'Tin nhắn mới',
-                f'{khachhang.hoten} đã gửi tin nhắn cho bạn',
-                'message'
-            )
+        Tinnhan.objects.create(
+            makh_gui=khachhang,
+            makh_nhan=partner,
+            noidung=result
+        )
 
-            return redirect('bookings:conversation', partner_id=partner_id)
+        # Notify partner
+        create_notification(
+            partner,
+            'Tin nhắn mới',
+            f'{khachhang.hoten} đã gửi tin nhắn cho bạn',
+            'message'
+        )
+
+        return redirect('bookings:conversation', partner_id=partner_id)
 
     return render(request, 'bookings/conversation.html', {
         'partner': partner,
@@ -252,9 +305,35 @@ def conversation(request, partner_id):
     })
 
 
+def validate_message_content(content):
+    """
+    Validate nội dung tin nhắn:
+    - Không cho phép ký tự đặc biệt (trừ dấu câu tiếng Việt)
+    - Giới hạn 500 ký tự
+    """
+    import re
+
+    if not content:
+        return False, 'Vui lòng nhập nội dung tin nhắn.'
+
+    if len(content) > 500:
+        return False, 'Tin nhắn không được quá 500 ký tự.'
+
+    if len(content) < 2:
+        return False, 'Tin nhắn phải có ít nhất 2 ký tự.'
+
+    # Cho phép: chữ cái (bao gồm tiếng Việt), số, khoảng trắng, dấu câu cơ bản
+    # Không cho phép: <, >, {, }, [, ], |, \, ^, ~, `, @, #, $, %, &, *, =, +
+    dangerous_chars = re.compile(r'[<>{}|\[\]\\^~`@#$%&*=+]')
+    if dangerous_chars.search(content):
+        return False, 'Tin nhắn không được chứa ký tự đặc biệt (<, >, {, }, [, ], |, \\, ^, ~, `, @, #, $, %, &, *, =, +).'
+
+    return True, content
+
+
 @login_required_custom
 def send_message_to_landlord(request, room_id):
-    """Gửi tin nhắn cho chủ trọ"""
+    """Gửi tin nhắn cho chủ trọ - chỉ cho phép nhắn tin cho chủ trọ có phòng"""
     room = get_object_or_404(Phongtro, pk=room_id)
     khachhang = get_current_khachhang(request)
 
@@ -266,25 +345,41 @@ def send_message_to_landlord(request, room_id):
         messages.error(request, 'Không tìm thấy thông tin chủ trọ.')
         return redirect('rooms:room_detail', pk=room_id)
 
+    # Kiểm tra chủ trọ có phòng trọ không (đã có vì room tồn tại)
+    # Kiểm tra phòng đang hoạt động (còn trống hoặc đã thuê)
+    if room.trangthai not in ['Còn trống', 'Đã thuê']:
+        messages.error(request, 'Phòng trọ này không còn hoạt động.')
+        return redirect('rooms:room_detail', pk=room_id)
+
     if request.method == 'POST':
-        noidung = bleach.clean(request.POST.get('noidung', ''), strip=True)
+        noidung_raw = request.POST.get('noidung', '')
+        noidung_clean = bleach.clean(noidung_raw, strip=True)
 
-        if noidung:
-            Tinnhan.objects.create(
-                makh_gui=khachhang,
-                makh_nhan=landlord,
-                noidung=f"[Về phòng: {room.tenpt}] {noidung}"
-            )
+        # Validate nội dung tin nhắn
+        is_valid, result = validate_message_content(noidung_clean)
+        if not is_valid:
+            messages.error(request, result)
+            return render(request, 'bookings/send_message.html', {
+                'room': room,
+                'landlord': landlord,
+                'noidung': noidung_raw
+            })
 
-            create_notification(
-                landlord,
-                'Tin nhắn mới về phòng trọ',
-                f'{khachhang.hoten} hỏi về phòng "{room.tenpt}"',
-                'message'
-            )
+        Tinnhan.objects.create(
+            makh_gui=khachhang,
+            makh_nhan=landlord,
+            noidung=f"[Về phòng: {room.tenpt}] {result}"
+        )
 
-            messages.success(request, 'Đã gửi tin nhắn cho chủ trọ.')
-            return redirect('rooms:room_detail', pk=room_id)
+        create_notification(
+            landlord,
+            'Tin nhắn mới về phòng trọ',
+            f'{khachhang.hoten} hỏi về phòng "{room.tenpt}"',
+            'message'
+        )
+
+        messages.success(request, 'Đã gửi tin nhắn cho chủ trọ.')
+        return redirect('rooms:room_detail', pk=room_id)
 
     return render(request, 'bookings/send_message.html', {
         'room': room,
@@ -421,16 +516,16 @@ def landlord_dashboard(request):
         trangthai='Chờ xác nhận'
     ).select_related('mapt', 'makh')
 
-    # Get active rentals
-    active_rentals = Thuetro.objects.filter(
+    # Get confirmed appointments (thay thế active_rentals)
+    confirmed_henxem = Henxemtro.objects.filter(
         mapt__mant__makh=khachhang,
-        trangthai='Đang thuê'
+        trangthai__in=['Đã xác nhận', 'Đã xem']
     ).select_related('mapt', 'makh')
 
     return render(request, 'bookings/landlord_dashboard.html', {
         'nhatro_list': nhatro_list,
         'pending_henxem': pending_henxem,
-        'active_rentals': active_rentals
+        'confirmed_henxem': confirmed_henxem
     })
 
 

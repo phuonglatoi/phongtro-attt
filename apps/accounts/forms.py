@@ -5,9 +5,39 @@
 from django import forms
 from django.core.validators import RegexValidator
 from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 from .models import Khachhang
 import bleach
 import hashlib
+import re
+
+
+# ============================================
+# CUSTOM PASSWORD VALIDATOR
+# ============================================
+def validate_strong_password(password):
+    """
+    Validate password với các yêu cầu:
+    - Tối thiểu 8 ký tự
+    - Có ít nhất 1 chữ hoa
+    - Có ít nhất 1 chữ thường
+    - Có ít nhất 1 số
+    - Có ít nhất 1 ký tự đặc biệt
+    """
+    if len(password) < 8:
+        raise ValidationError('Mật khẩu phải có ít nhất 8 ký tự.')
+
+    if not re.search(r'[A-Z]', password):
+        raise ValidationError('Mật khẩu phải có ít nhất 1 chữ hoa (A-Z).')
+
+    if not re.search(r'[a-z]', password):
+        raise ValidationError('Mật khẩu phải có ít nhất 1 chữ thường (a-z).')
+
+    if not re.search(r'[0-9]', password):
+        raise ValidationError('Mật khẩu phải có ít nhất 1 chữ số (0-9).')
+
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]', password):
+        raise ValidationError('Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...).')
 
 
 class LoginForm(forms.Form):
@@ -40,8 +70,14 @@ class RegisterForm(forms.Form):
 
     username = forms.CharField(
         label='Họ tên',
+        min_length=2,
         max_length=200,
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Họ tên'})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Họ tên',
+            'minlength': '2',
+            'maxlength': '200'
+        })
     )
 
     email = forms.EmailField(
@@ -59,22 +95,42 @@ class RegisterForm(forms.Form):
                 message='Số điện thoại không hợp lệ (VD: 0912345678)'
             )
         ],
-        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Số điện thoại'})
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Số điện thoại',
+            'pattern': r'(\+84|0)[0-9]{9}'
+        })
     )
 
     password1 = forms.CharField(
         label='Mật khẩu',
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Mật khẩu'}),
-        validators=[validate_password]
+        min_length=8,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Mật khẩu (8+ ký tự, chữ hoa, chữ thường, số, ký tự đặc biệt)',
+            'minlength': '8'
+        }),
+        validators=[validate_strong_password],
+        help_text='Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.'
     )
 
     password2 = forms.CharField(
         label='Xác nhận mật khẩu',
-        widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Xác nhận mật khẩu'})
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Xác nhận mật khẩu'
+        })
     )
 
     def clean_username(self):
-        username = bleach.clean(self.cleaned_data.get("username"), strip=True)
+        username = self.cleaned_data.get("username")
+        if username:
+            username = bleach.clean(username, strip=True)
+            # Chỉ cho phép chữ cái, số, khoảng trắng và dấu tiếng Việt
+            if len(username) < 2:
+                raise forms.ValidationError("Họ tên phải có ít nhất 2 ký tự.")
+            if len(username) > 200:
+                raise forms.ValidationError("Họ tên không được quá 200 ký tự.")
         return username
 
     def clean_email(self):

@@ -35,16 +35,13 @@ urlpatterns = [
     path('admin/', admin.site.urls),
 
     # --- 1. Custom Accounts (Code đăng nhập/đăng ký của bạn) ---
+    # Các chức năng accounts được xử lý bởi custom views
     path('accounts/', include('apps.accounts.urls')),
 
-    # --- 2. Django Auth (BẮT BUỘC THÊM DÒNG NÀY ĐỂ SỬA LỖI) ---
-    # Dòng này cung cấp: password_reset, password_change, login, logout...
-    path('accounts/', include('django.contrib.auth.urls')),
-
-    # --- 3. Django-allauth (Đăng nhập Google/Facebook) ---
+    # --- 2. Django-allauth (Đăng nhập Google/Facebook) ---
     path('accounts/social/', include('allauth.urls')),
 
-    # --- 4. Các App chức năng chính ---
+    # --- 3. Các App chức năng chính ---
     path('', include('apps.rooms.urls')), # Trang chủ
     path('bookings/', include('apps.bookings.urls')),
     path('reviews/', include('apps.reviews.urls')),
@@ -56,9 +53,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    
-    # Debug toolbar
-    import debug_toolbar
-    urlpatterns = [
-        path('__debug__/', include(debug_toolbar.urls)),
-    ] + urlpatterns

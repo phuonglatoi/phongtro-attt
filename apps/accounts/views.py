@@ -527,6 +527,10 @@ def login_required_custom(view_func):
 @login_required_custom
 @require_http_methods(['GET', 'POST'])
 def password_change_view(request):
+    """Đổi mật khẩu - sử dụng SHA256 + Salt"""
+    import re
+    import uuid
+
     khachhang = get_current_khachhang(request)
     if not khachhang or not khachhang.matk:
         return redirect('accounts:login')
@@ -540,8 +544,8 @@ def password_change_view(request):
         confirm_password = request.POST.get('confirm_password', '')
         otp_code = request.POST.get('otp_code', '')
 
-        # Validate old password
-        if not verify_password_sql(old_password, taikhoan.matkhau_hash):
+        # Validate old password using verify_password function
+        if not verify_password(old_password, taikhoan.password_hash, taikhoan.password_salt):
             messages.error(request, 'Mật khẩu hiện tại không đúng.')
             return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
 
@@ -550,14 +554,29 @@ def password_change_view(request):
             messages.error(request, 'Mật khẩu mới không khớp.')
             return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
 
-        # Validate password strength
+        # Validate password strength - 8+ chars, uppercase, lowercase, number, special char
         if len(new_password) < 8:
             messages.error(request, 'Mật khẩu mới phải có ít nhất 8 ký tự.')
             return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
 
+        if not re.search(r'[A-Z]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 chữ hoa (A-Z).')
+            return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
+
+        if not re.search(r'[a-z]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 chữ thường (a-z).')
+            return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
+
+        if not re.search(r'[0-9]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 chữ số (0-9).')
+            return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
+
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt (!@#$%^&*...).')
+            return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
+
         # Validate 2FA if enabled
         if requires_2fa:
-            import pyotp
             if not otp_code:
                 messages.error(request, 'Vui lòng nhập mã xác thực.')
                 return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
@@ -566,10 +585,17 @@ def password_change_view(request):
                 messages.error(request, 'Mã xác thực không đúng.')
                 return render(request, 'accounts/password_change.html', {'requires_2fa': requires_2fa})
 
-        # Update password
-        taikhoan.matkhau = new_password
-        taikhoan.matkhau_hash = hash_password_sql(new_password)
+        # Update password with new salt
+        new_salt = str(uuid.uuid4())
+        new_hash = hash_password(new_password, new_salt)
+
+        taikhoan.password_hash = new_hash
+        taikhoan.password_salt = new_salt
         taikhoan.save()
+
+        # Update last password change time
+        khachhang.last_password_change = timezone.now()
+        khachhang.save()
 
         messages.success(request, 'Đổi mật khẩu thành công!')
         return redirect('accounts:profile')
@@ -840,27 +866,307 @@ def edit_profile_view(request):
 
 
 # ============================================
-# PASSWORD RESET WRAPPERS
+# PASSWORD RESET (Email OTP Verification)
 # ============================================
+import random
+from django.core.mail import send_mail
+from django.conf import settings
 
-def password_reset_view(request, *a, **kw):
-    return auth_views.PasswordResetView.as_view(
-        template_name='accounts/password_reset.html',
-        success_url='/accounts/password_reset/done/'
-    )(request, *a, **kw)
 
-def password_reset_done_view(request, *a, **kw):
-    return auth_views.PasswordResetDoneView.as_view(
-        template_name='accounts/password_reset_done.html'
-    )(request, *a, **kw)
+def generate_otp():
+    """Tạo mã OTP 6 số"""
+    return ''.join([str(random.randint(0, 9)) for _ in range(6)])
 
-def password_reset_confirm_view(request, *a, **kw):
-    return auth_views.PasswordResetConfirmView.as_view(
-        template_name='accounts/password_reset_confirm.html',
-        success_url='/accounts/login/'
-    )(request, *a, **kw)
 
-def password_reset_complete_view(request, *a, **kw):
-    return auth_views.PasswordResetCompleteView.as_view(
-        template_name='accounts/password_reset_complete.html'
-    )(request, *a, **kw)
+@require_http_methods(['GET', 'POST'])
+@ratelimit(key='ip', rate='5/h', method='POST')
+def password_reset_view(request):
+    """Bước 1: Nhập email để lấy lại mật khẩu - Gửi mã OTP qua email"""
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip().lower()
+
+        if not email:
+            messages.error(request, 'Vui lòng nhập email.')
+            return render(request, 'accounts/password_reset.html')
+
+        # Tìm khách hàng theo email
+        try:
+            khachhang = Khachhang.objects.get(email=email)
+        except Khachhang.DoesNotExist:
+            # Không tiết lộ email có tồn tại hay không (bảo mật)
+            messages.info(request, 'Nếu email tồn tại trong hệ thống, bạn sẽ nhận được mã xác nhận.')
+            return render(request, 'accounts/password_reset.html')
+
+        # Tạo mã OTP 6 số
+        otp_code = generate_otp()
+        otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+
+        # Lưu vào session
+        request.session['password_reset_email'] = email
+        request.session['password_reset_otp'] = otp_code
+        request.session['password_reset_otp_expiry'] = otp_expiry.isoformat()
+        request.session['password_reset_attempts'] = 0
+
+        # Gửi email
+        try:
+            subject = '🔐 Mã xác nhận đặt lại mật khẩu - PhongTro.vn'
+            message = f'''Xin chào {khachhang.hoten},
+
+Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản PhongTro.vn.
+
+🔑 Mã xác nhận của bạn là: {otp_code}
+
+⏰ Mã này có hiệu lực trong 10 phút.
+
+⚠️ Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+
+---
+PhongTro.vn - Nền tảng tìm phòng trọ an toàn
+'''
+            html_message = f'''
+            <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 style="color: #0d6efd;">🏠 PhongTro.vn</h2>
+                </div>
+                <p>Xin chào <strong>{khachhang.hoten}</strong>,</p>
+                <p>Bạn đã yêu cầu đặt lại mật khẩu cho tài khoản PhongTro.vn.</p>
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0; color: #6c757d;">Mã xác nhận của bạn:</p>
+                    <h1 style="letter-spacing: 8px; color: #0d6efd; margin: 0; font-size: 36px;">{otp_code}</h1>
+                </div>
+                <p style="color: #dc3545;">⏰ Mã này có hiệu lực trong <strong>10 phút</strong>.</p>
+                <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
+                <p style="color: #6c757d; font-size: 12px;">
+                    ⚠️ Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+                </p>
+            </div>
+            '''
+
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            messages.success(request, f'Mã xác nhận đã được gửi đến {email}')
+            return redirect('accounts:password_reset_verify_otp')
+
+        except Exception as e:
+            print(f"Email error: {e}")
+            messages.error(request, 'Không thể gửi email. Vui lòng thử lại sau.')
+            return render(request, 'accounts/password_reset.html')
+
+    return render(request, 'accounts/password_reset.html')
+
+
+@require_http_methods(['GET', 'POST'])
+@ratelimit(key='ip', rate='10/h', method='POST')
+def password_reset_verify_otp_view(request):
+    """Bước 2: Xác nhận mã OTP từ email"""
+    email = request.session.get('password_reset_email')
+    otp_expiry_str = request.session.get('password_reset_otp_expiry')
+
+    if not email or not otp_expiry_str:
+        messages.error(request, 'Phiên làm việc đã hết hạn. Vui lòng thử lại.')
+        return redirect('accounts:password_reset')
+
+    # Kiểm tra hết hạn
+    otp_expiry = timezone.datetime.fromisoformat(otp_expiry_str)
+    if timezone.now() > otp_expiry:
+        messages.error(request, 'Mã xác nhận đã hết hạn. Vui lòng yêu cầu mã mới.')
+        # Xóa session
+        for key in ['password_reset_email', 'password_reset_otp', 'password_reset_otp_expiry']:
+            request.session.pop(key, None)
+        return redirect('accounts:password_reset')
+
+    # Tính thời gian còn lại
+    remaining_seconds = int((otp_expiry - timezone.now()).total_seconds())
+
+    # Ẩn email (chỉ hiện 3 ký tự đầu)
+    email_parts = email.split('@')
+    masked_email = email_parts[0][:3] + '***@' + email_parts[1]
+
+    if request.method == 'POST':
+        entered_otp = request.POST.get('otp_code', '').strip()
+        stored_otp = request.session.get('password_reset_otp')
+        attempts = request.session.get('password_reset_attempts', 0)
+
+        if not entered_otp:
+            messages.error(request, 'Vui lòng nhập mã xác nhận.')
+            return render(request, 'accounts/password_reset_verify_otp.html', {
+                'masked_email': masked_email,
+                'remaining_seconds': remaining_seconds
+            })
+
+        if attempts >= 5:
+            messages.error(request, 'Bạn đã nhập sai quá nhiều lần. Vui lòng yêu cầu mã mới.')
+            for key in ['password_reset_email', 'password_reset_otp', 'password_reset_otp_expiry']:
+                request.session.pop(key, None)
+            return redirect('accounts:password_reset')
+
+        if entered_otp == stored_otp:
+            # Đúng OTP - cho phép đặt mật khẩu mới
+            request.session['password_reset_verified'] = True
+            messages.success(request, 'Xác nhận thành công! Vui lòng đặt mật khẩu mới.')
+            return redirect('accounts:password_reset_confirm')
+        else:
+            request.session['password_reset_attempts'] = attempts + 1
+            remaining_attempts = 5 - (attempts + 1)
+            messages.error(request, f'Mã xác nhận không đúng. Còn {remaining_attempts} lần thử.')
+            return render(request, 'accounts/password_reset_verify_otp.html', {
+                'masked_email': masked_email,
+                'remaining_seconds': remaining_seconds
+            })
+
+    return render(request, 'accounts/password_reset_verify_otp.html', {
+        'masked_email': masked_email,
+        'remaining_seconds': remaining_seconds
+    })
+
+
+@require_http_methods(['POST'])
+@ratelimit(key='ip', rate='3/h', method='POST')
+def password_reset_resend_otp_view(request):
+    """Gửi lại mã OTP"""
+    email = request.session.get('password_reset_email')
+
+    if not email:
+        messages.error(request, 'Phiên làm việc đã hết hạn.')
+        return redirect('accounts:password_reset')
+
+    try:
+        khachhang = Khachhang.objects.get(email=email)
+    except Khachhang.DoesNotExist:
+        return redirect('accounts:password_reset')
+
+    # Tạo mã OTP mới
+    otp_code = generate_otp()
+    otp_expiry = timezone.now() + timezone.timedelta(minutes=10)
+
+    request.session['password_reset_otp'] = otp_code
+    request.session['password_reset_otp_expiry'] = otp_expiry.isoformat()
+    request.session['password_reset_attempts'] = 0
+
+    # Gửi email
+    try:
+        subject = '🔐 Mã xác nhận mới - PhongTro.vn'
+        html_message = f'''
+        <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="color: #0d6efd;">🏠 PhongTro.vn</h2>
+            </div>
+            <p>Xin chào <strong>{khachhang.hoten}</strong>,</p>
+            <p>Đây là mã xác nhận mới của bạn:</p>
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;">
+                <h1 style="letter-spacing: 8px; color: #0d6efd; margin: 0; font-size: 36px;">{otp_code}</h1>
+            </div>
+            <p style="color: #dc3545;">⏰ Mã này có hiệu lực trong <strong>10 phút</strong>.</p>
+        </div>
+        '''
+
+        send_mail(
+            subject=subject,
+            message=f'Mã xác nhận mới của bạn là: {otp_code}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+
+        messages.success(request, 'Đã gửi mã xác nhận mới!')
+
+    except Exception as e:
+        print(f"Email error: {e}")
+        messages.error(request, 'Không thể gửi email. Vui lòng thử lại.')
+
+    return redirect('accounts:password_reset_verify_otp')
+
+
+@require_http_methods(['GET', 'POST'])
+@ratelimit(key='ip', rate='5/h', method='POST')
+def password_reset_confirm_view(request, uidb64=None, token=None):
+    """Bước 3: Đặt mật khẩu mới"""
+    import re
+    import uuid
+
+    email = request.session.get('password_reset_email')
+    verified = request.session.get('password_reset_verified')
+
+    if not email or not verified:
+        return redirect('accounts:password_reset')
+
+    try:
+        khachhang = Khachhang.objects.get(email=email)
+        taikhoan = khachhang.matk
+    except (Khachhang.DoesNotExist, AttributeError):
+        messages.error(request, 'Có lỗi xảy ra. Vui lòng thử lại.')
+        return redirect('accounts:password_reset')
+
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password', '')
+        confirm_password = request.POST.get('confirm_password', '')
+
+        # Validate passwords match
+        if new_password != confirm_password:
+            messages.error(request, 'Mật khẩu xác nhận không khớp.')
+            return render(request, 'accounts/password_reset_confirm.html')
+
+        # Validate password strength
+        if len(new_password) < 8:
+            messages.error(request, 'Mật khẩu phải có ít nhất 8 ký tự.')
+            return render(request, 'accounts/password_reset_confirm.html')
+
+        if not re.search(r'[A-Z]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 chữ hoa (A-Z).')
+            return render(request, 'accounts/password_reset_confirm.html')
+
+        if not re.search(r'[a-z]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 chữ thường (a-z).')
+            return render(request, 'accounts/password_reset_confirm.html')
+
+        if not re.search(r'[0-9]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 chữ số (0-9).')
+            return render(request, 'accounts/password_reset_confirm.html')
+
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]', new_password):
+            messages.error(request, 'Mật khẩu phải có ít nhất 1 ký tự đặc biệt.')
+            return render(request, 'accounts/password_reset_confirm.html')
+
+        # Update password
+        new_salt = str(uuid.uuid4())
+        new_hash = hash_password(new_password, new_salt)
+
+        taikhoan.password_hash = new_hash
+        taikhoan.password_salt = new_salt
+        taikhoan.failed_login_count = 0
+        taikhoan.is_locked = False
+        taikhoan.lock_time = None
+        taikhoan.save()
+
+        # Update last password change
+        khachhang.last_password_change = timezone.now()
+        khachhang.save()
+
+        # Clear session
+        if 'password_reset_email' in request.session:
+            del request.session['password_reset_email']
+        if 'password_reset_verified' in request.session:
+            del request.session['password_reset_verified']
+
+        messages.success(request, 'Đặt lại mật khẩu thành công! Vui lòng đăng nhập.')
+        return redirect('accounts:login')
+
+    return render(request, 'accounts/password_reset_confirm.html')
+
+
+def password_reset_done_view(request):
+    """Thông báo đã gửi email (không dùng nữa)"""
+    return redirect('accounts:password_reset')
+
+
+def password_reset_complete_view(request):
+    """Hoàn thành reset password (không dùng nữa)"""
+    return redirect('accounts:login')

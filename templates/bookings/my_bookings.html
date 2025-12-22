@@ -4,25 +4,14 @@
 
 {% block content %}
 <div class="container py-5">
-    <h2 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Lịch hẹn của tôi</h2>
-    
-    <!-- Tabs -->
-    <ul class="nav nav-tabs mb-4" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#henxem-tab">
-                <i class="fas fa-eye me-2"></i>Lịch xem phòng ({{ henxem_list|length }})
-            </button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#thuetro-tab">
-                <i class="fas fa-home me-2"></i>Hợp đồng thuê ({{ thuetro_list|length }})
-            </button>
-        </li>
-    </ul>
-    
-    <div class="tab-content">
-        <!-- Lịch xem phòng -->
-        <div class="tab-pane fade show active" id="henxem-tab">
+    <h2 class="mb-4"><i class="fas fa-calendar-alt me-2"></i>Lịch hẹn xem phòng của tôi</h2>
+
+    <!-- Lịch xem phòng -->
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="fas fa-eye me-2"></i>Lịch xem phòng ({{ henxem_list|length }})</h5>
+        </div>
+        <div class="card-body">
             {% if henxem_list %}
             <div class="table-responsive">
                 <table class="table table-hover">
@@ -48,16 +37,23 @@
                                     <span class="badge bg-success">{{ henxem.trangthai }}</span>
                                 {% elif henxem.trangthai == 'Đã hủy' %}
                                     <span class="badge bg-danger">{{ henxem.trangthai }}</span>
+                                {% elif henxem.trangthai == 'Đã xem' %}
+                                    <span class="badge bg-info">{{ henxem.trangthai }}</span>
                                 {% else %}
                                     <span class="badge bg-secondary">{{ henxem.trangthai }}</span>
                                 {% endif %}
                             </td>
                             <td>
                                 {% if henxem.trangthai == 'Chờ xác nhận' %}
-                                <a href="{% url 'bookings:cancel_henxem' pk=henxem.mahxt %}" 
+                                <a href="{% url 'bookings:cancel_henxem' pk=henxem.mahxt %}"
                                    class="btn btn-sm btn-outline-danger"
                                    onclick="return confirm('Bạn chắc chắn muốn hủy?')">
                                     <i class="fas fa-times"></i> Hủy
+                                </a>
+                                {% elif henxem.trangthai == 'Đã xác nhận' or henxem.trangthai == 'Đã xem' %}
+                                <a href="{% url 'bookings:create_review' room_id=henxem.mapt.mapt %}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-star"></i> Đánh giá
                                 </a>
                                 {% endif %}
                             </td>
@@ -67,49 +63,9 @@
                 </table>
             </div>
             {% else %}
-            <div class="alert alert-info">
+            <div class="alert alert-info mb-0">
                 <i class="fas fa-info-circle me-2"></i>Bạn chưa có lịch hẹn nào.
                 <a href="{% url 'rooms:room_list' %}">Tìm phòng ngay</a>
-            </div>
-            {% endif %}
-        </div>
-        
-        <!-- Hợp đồng thuê -->
-        <div class="tab-pane fade" id="thuetro-tab">
-            {% if thuetro_list %}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Phòng</th>
-                            <th>Nhà trọ</th>
-                            <th>Ngày bắt đầu</th>
-                            <th>Tiền cọc</th>
-                            <th>Trạng thái</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for thuetro in thuetro_list %}
-                        <tr>
-                            <td>{{ thuetro.mapt.tenpt }}</td>
-                            <td>{{ thuetro.mapt.mant.tennt }}</td>
-                            <td>{{ thuetro.ngaybatdau|date:"d/m/Y" }}</td>
-                            <td>{{ thuetro.tiencoc|floatformat:0 }} VNĐ</td>
-                            <td>
-                                {% if thuetro.trangthai == 'Đang thuê' %}
-                                    <span class="badge bg-success">{{ thuetro.trangthai }}</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">{{ thuetro.trangthai }}</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>Bạn chưa có hợp đồng thuê nào.
             </div>
             {% endif %}
         </div>
