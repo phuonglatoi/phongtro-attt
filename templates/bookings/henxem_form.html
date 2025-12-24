@@ -16,21 +16,29 @@
                         <strong>Nhà trọ:</strong> {{ room.mant.tennt }}<br>
                         <strong>Địa chỉ:</strong> {{ room.mant.diachi }}<br>
                         <strong>Giá:</strong> {{ room.giatien|floatformat:0 }} VNĐ/tháng
-                    </div>
-                    
+                    </div>                   
                     <form method="post">
                         {% csrf_token %}
                         
-                        <div class="mb-3">
-                            <label for="ngayhen" class="form-label">Ngày giờ hẹn <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" id="ngayhen" name="ngayhen" required>
-                            <div class="form-text">Chọn ngày giờ bạn muốn đến xem phòng</div>
+                        <div class="row">
+                            <div class="col-md-7 mb-3">
+                                <label for="ngay" class="form-label">Ngày hẹn <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="ngay" name="ngay" 
+                                    value="{{ old_ngay|default:'' }}" required>
+                            </div>
+                            
+                            <div class="col-md-5 mb-3">
+                                <label for="gio" class="form-label">Giờ hẹn <span class="text-danger">*</span></label>
+                                <input type="time" class="form-control" id="gio" name="gio" 
+                                    value="{{ old_gio|default:'' }}" required>
+                            </div>
                         </div>
+                        <div class="form-text mb-3">Vui lòng chọn ngày và giờ bạn muốn đến xem phòng.</div>
                         
                         <div class="mb-3">
                             <label for="ghichu" class="form-label">Ghi chú</label>
                             <textarea class="form-control" id="ghichu" name="ghichu" rows="3" 
-                                      placeholder="Ví dụ: Tôi sẽ đến cùng gia đình..."></textarea>
+                                    placeholder="Nhập ghi chú (2-30 ký tự, không ký tự đặc biệt)...">{{ old_ghichu|default:'' }}</textarea>
                         </div>
                         
                         <div class="d-grid gap-2">

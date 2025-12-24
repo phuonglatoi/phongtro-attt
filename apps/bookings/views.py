@@ -10,6 +10,9 @@ from django.db.models import Q
 from django_ratelimit.decorators import ratelimit
 import bleach
 
+import re
+from datetime import datetime
+
 from .models import Henxemtro, Thuetro, Danhgia, Tinnhan, Thongbao, Yclamchutro
 from apps.rooms.models import Phongtro, Nhatro
 from apps.accounts.models import Khachhang
@@ -65,35 +68,62 @@ def create_henxem(request, room_id):
         messages.error(request, 'Vui lòng đăng nhập để đặt lịch xem phòng.')
         return redirect('accounts:login')
 
+    if room.mant.makh == khachhang:
+        messages.warning(request, 'Bạn không thể đặt lịch xem phòng của chính mình.')
+        return redirect('rooms:room_detail', pk=room_id)
+
     if request.method == 'POST':
-        ngayhen = request.POST.get('ngayhen')
-        ghichu = bleach.clean(request.POST.get('ghichu', ''), strip=True)
+        # 1. Lấy dữ liệu tách rời
+        ngay = request.POST.get('ngay')
+        gio = request.POST.get('gio')
+        
+        ghichu_raw = request.POST.get('ghichu', '')
+        ghichu = bleach.clean(ghichu_raw, strip=True)
 
-        if not ngayhen:
-            messages.error(request, 'Vui lòng chọn ngày hẹn.')
-            return render(request, 'bookings/henxem_form.html', {'room': room})
+        # 2. Ghép ngày và giờ lại để validate và lưu DB
+        # Định dạng ghép: YYYY-MM-DD + T + HH:MM (Ví dụ: 2023-10-25T14:30)
+        ngayhen_full = ""
+        if ngay and gio:
+            ngayhen_full = f"{ngay}T{gio}"
 
-        # Create appointment
-        henxem = Henxemtro.objects.create(
-            mapt=room,
-            makh=khachhang,
-            ngayhen=ngayhen,
-            ghichu=ghichu,
-            trangthai='Chờ xác nhận'
-        )
+        # 3. Gọi hàm validate (Hàm này bạn đã thêm ở bước trước)
+        is_valid, error_msg = validate_henxem_data(ngayhen_full, ghichu)
+        
+        if not is_valid:
+            messages.error(request, error_msg)
+            # Trả về form cùng dữ liệu cũ để user không phải nhập lại
+            # Lưu ý: Trả về old_ngay và old_gio riêng
+            return render(request, 'bookings/henxem_form.html', {
+                'room': room,
+                'old_ngay': ngay,
+                'old_gio': gio,
+                'old_ghichu': ghichu
+            })
 
-        # Notify the landlord
-        landlord = room.mant.makh
-        if landlord:
-            create_notification(
-                landlord,
-                'Có lịch hẹn xem phòng mới',
-                f'{khachhang.hoten} muốn xem phòng "{room.tenpt}" vào {ngayhen}',
-                'booking'
+        try:
+            henxem = Henxemtro.objects.create(
+                mapt=room,
+                makh=khachhang,
+                ngayhen=ngayhen_full, # Lưu chuỗi đã ghép
+                ghichu=ghichu,
+                trangthai='Chờ xác nhận'
             )
 
-        messages.success(request, 'Đã gửi yêu cầu hẹn xem phòng!')
-        return redirect('rooms:room_detail', pk=room_id)
+            # Notify landlord... (Giữ nguyên code cũ)
+            landlord = room.mant.makh
+            if landlord:
+                create_notification(
+                    landlord,
+                    'Có lịch hẹn xem phòng mới',
+                    f'{khachhang.hoten} muốn xem phòng "{room.tenpt}" vào {gio} ngày {ngay}',
+                    'booking'
+                )
+
+            messages.success(request, 'Đã gửi yêu cầu hẹn xem phòng thành công!')
+            return redirect('rooms:room_detail', pk=room_id)
+            
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
 
     return render(request, 'bookings/henxem_form.html', {'room': room})
 
@@ -1085,3 +1115,44 @@ def admin_history(request):
         cursor.execute("SELECT TOP 50 * FROM AUDIT_LOGS ORDER BY CHANGED_DATE DESC")
         logs = cursor.fetchall()
     return render(request, 'quan_tri/history.html', {'logs': logs})
+
+def validate_henxem_data(ngayhen_str, ghichu):
+    """
+    Hàm validate riêng cho chức năng hẹn xem:
+    1. Ngày hẹn không được ở quá khứ.
+    2. Ghi chú: 2-30 ký tự, không ký tự đặc biệt.
+    """
+    # --- 1. Validate Ngày hẹn ---
+    if not ngayhen_str:
+        return False, 'Vui lòng chọn ngày giờ hẹn.'
+    
+    try:
+        # Input từ datetime-local có dạng: YYYY-MM-DDTHH:MM
+        hen_time = datetime.strptime(ngayhen_str, '%Y-%m-%dT%H:%M')
+        # Gán timezone hiện tại cho giờ hẹn (để so sánh được với timezone.now())
+        hen_time = timezone.make_aware(hen_time)
+        
+        if hen_time < timezone.now():
+            return False, 'Thời gian hẹn không được nằm trong quá khứ.'
+            
+    except ValueError:
+        return False, 'Định dạng ngày giờ không hợp lệ.'
+
+    # --- 2. Validate Ghi chú ---
+    # Nếu có ghi chú thì mới check (hoặc bắt buộc nhập tùy bạn, code dưới đây giả định là BẮT BUỘC nhập vì có rule 2-30 ký tự)
+    if not ghichu:
+        return False, 'Vui lòng nhập ghi chú.'
+
+    ghichu = ghichu.strip()
+    
+    # Check độ dài 2 - 30 ký tự
+    if len(ghichu) < 2 or len(ghichu) > 30:
+        return False, 'Ghi chú phải từ 2 đến 30 ký tự.'
+    
+    # Check ký tự đặc biệt (Chỉ cho phép: Chữ, Số, Khoảng trắng, dấu chấm, dấu phẩy, gạch ngang)
+    # Regex chặn các ký tự đặc biệt như: @ # $ % ^ & * ( ) _ + = { } [ ] | \ : ; " ' < > ? / ~ `
+    special_chars = re.compile(r'[<>{}|\[\]\\^~`@#$%&*=+/;:_()!?"\']')
+    if special_chars.search(ghichu):
+        return False, 'Ghi chú không được chứa ký tự đặc biệt.'
+
+    return True, ''
