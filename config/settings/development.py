@@ -29,6 +29,13 @@ if db_user and db_password:
 else:
     extra_params = 'TrustServerCertificate=yes;Trusted_Connection=yes;'
 
+if db_user and db_password:
+    base_params = 'TrustServerCertificate=yes;'
+else:
+    base_params = 'TrustServerCertificate=yes;Trusted_Connection=yes;'
+
+full_extra_params = base_params + 'ColumnEncryption=Enabled;'
+
 DATABASES = {
     'default': {
         'ENGINE': 'mssql',
@@ -39,7 +46,7 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', '1433'),
         'OPTIONS': {
             'driver': 'ODBC Driver 18 for SQL Server',
-            'extra_params': extra_params,
+            'extra_params': full_extra_params, # Dùng chuỗi tổng hợp ở đây
         },
     }
 }

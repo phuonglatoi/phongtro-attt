@@ -63,7 +63,7 @@ opencensus-ext-azure==1.1.15
 opencensus-ext-django==0.8.0
 opencensus-ext-logging==0.1.1
 packaging==25.0
-Pillow==10.1.0
+Pillow>=10.1.0
 pluggy==1.6.0
 prompt_toolkit==3.0.52
 propcache==0.4.1
@@ -75,7 +75,7 @@ pyasn1_modules==0.4.2
 pycparser==2.23
 Pygments==2.19.2
 PyJWT==2.10.1
-pyodbc==5.0.1
+#pyodbc==5.0.1
 pyotp==2.9.0
 pypng==0.20220715.0
 pytest==9.0.2

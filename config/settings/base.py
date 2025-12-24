@@ -5,6 +5,7 @@
 import os
 from pathlib import Path
 from decouple import config
+from django.contrib.messages import constants as messages
 
 # Base dir
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -67,6 +68,8 @@ INSTALLED_APPS = [
     'apps.chat',
     'apps.security',
     'apps.core',
+
+    'django.contrib.humanize',
 ]
 
 # ⭐ khai báo đúng 1 lần duy nhất
@@ -92,7 +95,7 @@ MIDDLEWARE = [
 
     # custom middleware
     'apps.security.middleware.ip_filter.IPFilterMiddleware',
-    'apps.security.middleware.waf.WAFMiddleware',
+    # 'apps.security.middleware.waf.WAFMiddleware',
     'apps.security.middleware.audit.AuditMiddleware',
     'apps.security.middleware.device_tracking.DeviceTrackingMiddleware',
 ]
@@ -202,29 +205,29 @@ SILENCED_SYSTEM_CHECKS = [
 
 WAF_ENABLED = True
 
-WAF_BLOCK_PATTERNS = {
-    'sql_injection': [
-        r"union.*select",
-        r"xp_cmdshell",
-        r"DROP TABLE",
-        r"INSERT INTO",
-    ],
-    'xss': [
-        r"<script>",
-        r"javascript:",
-        r"alert\(",
-        r"onload=",
-    ],
-    'path_traversal': [
-        r"\.\./",
-        r"etc/passwd",
-        r"win\.ini",
-    ],
-    'cmd_injection': [
-        r"cmd\.exe",
-        r"bash -i",
-    ]
-}
+# WAF_BLOCK_PATTERNS = {
+#     'sql_injection': [
+#         r"union.*select",
+#         r"xp_cmdshell",
+#         r"DROP TABLE",
+#         r"INSERT INTO",
+#     ],
+#     'xss': [
+#         r"<script>",
+#         r"javascript:",
+#         r"alert\(",
+#         r"onload=",
+#     ],
+#     'path_traversal': [
+#         r"\.\./",
+#         r"etc/passwd",
+#         r"win\.ini",
+#     ],
+#     'cmd_injection': [
+#         r"cmd\.exe",
+#         r"bash -i",
+#     ]
+# }
 
 
 # ======================================================
@@ -281,3 +284,7 @@ SILENCED_SYSTEM_CHECKS = [
     'django_ratelimit.E003',  # Ẩn lỗi Cache không dùng chung
     'django_ratelimit.W001',  # Ẩn cảnh báo Cache không hỗ trợ
 ]
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',
+}

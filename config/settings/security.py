@@ -276,22 +276,22 @@ MEDIA_ROOT_PERMISSIONS = 0o755  # rwxr-xr-x (no execute for files)
 WAF_ENABLED = True
 
 # Patterns to block
-WAF_BLOCK_PATTERNS = {
-    'sql_injection': [
-        r"(\b(SELECT|UNION|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)",
-        r"(--|#|/\*|\*/|;)",
-        r"(\bOR\b.*=.*|AND\b.*=.*)",
-    ],
-    'xss': [
-        r"(<script|<iframe|<object|<embed|javascript:)",
-        r"(onerror|onload|onclick|onmouseover)=",
-    ],
-    'path_traversal': [
-        r"(\.\./|\.\.\\)",
-        r"(/etc/passwd|/etc/shadow|C:\\Windows)",
-    ],
-    'command_injection': [
-        r"(;|\||&|`|\$\(|\${)",
-        r"(\bcat\b|\bls\b|\bwhoami\b|\bpwd\b)",
-    ],
-}
+# WAF_BLOCK_PATTERNS = {
+#     'sql_injection': [
+#         r"(\b(SELECT|UNION|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|EXECUTE)\b)",
+#         r"(--|#|/\*|\*/|;)",
+#         r"(\bOR\b.*=.*|AND\b.*=.*)",
+#     ],
+#     'xss': [
+#         r"(<script|<iframe|<object|<embed|javascript:)",
+#         r"(onerror|onload|onclick|onmouseover)=",
+#     ],
+#     'path_traversal': [
+#         r"(\.\./|\.\.\\)",
+#         r"(/etc/passwd|/etc/shadow|C:\\Windows)",
+#     ],
+#     'command_injection': [
+#         r"(;|\||&|`|\$\(|\${)",
+#         r"(\bcat\b|\bls\b|\bwhoami\b|\bpwd\b)",
+#     ],
+# }

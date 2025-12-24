@@ -1,0 +1,410 @@
+{% extends 'quan_tri/base_admin.html' %}
+{% load static %}
+
+{% block title %}Dashboard Quản Trị{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Layout */
+    .dashboard-container {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        min-height: calc(100vh - 80px);
+        gap: 2rem;
+        padding: 2rem;
+    }
+
+    /* Sidebar */
+    .sidebar-card {
+        background: var(--main-white);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        position: sticky;
+        top: 100px;
+        height: fit-content;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .nav-section-title {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--paragraph);
+        margin: 1.5rem 0 0.5rem 1rem;
+        font-weight: 700;
+        opacity: 0.7;
+    }
+    .nav-section-title:first-child { margin-top: 0; }
+
+    .nav-link-custom {
+        display: flex;
+        align-items: center;
+        padding: 1rem 1.2rem;
+        color: var(--paragraph);
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        transition: all 0.2s ease;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .nav-link-custom i {
+        width: 24px;
+        margin-right: 12px;
+        font-size: 1.1rem;
+        color: var(--button);
+    }
+
+    .nav-link-custom:hover {
+        background-color: var(--bg-color);
+        color: var(--headline);
+        transform: translateX(5px);
+    }
+
+    .nav-link-custom.active {
+        background-color: var(--secondary);
+        color: var(--headline);
+        font-weight: 700;
+    }
+
+    /* Stats Cards */
+    .stat-card {
+        background: var(--main-white);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: transform 0.3s;
+        box-shadow: var(--shadow-soft);
+    }
+    .stat-card:hover { transform: translateY(-5px); }
+    
+    /* Pagination Controls */
+    .pagination-controls {
+        display: flex;
+        justify-content: center;
+        gap: 5px;
+        margin-top: 1rem;
+    }
+    .page-btn {
+        border: 1px solid #dee2e6;
+        background: white;
+        padding: 5px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .page-btn:hover { background: #f8f9fa; }
+    .page-btn.active {
+        background: var(--primary-color, #0d6efd);
+        color: white;
+        border-color: var(--primary-color, #0d6efd);
+    }
+    .page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 992px) {
+        .dashboard-container { grid-template-columns: 1fr; }
+        .sidebar-card { position: static; margin-bottom: 1rem; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    
+    <aside class="sidebar-card">
+        <div class="nav-section-title">Tổng quan</div>
+        <a href="{% url 'bookings:admin_dashboard' %}" class="nav-link-custom active">
+            <i class="fas fa-chart-pie"></i> Dashboard
+        </a>
+
+        <div class="nav-section-title">Quản lý</div>
+        <a href="{% url 'bookings:manage_customers' %}" class="nav-link-custom">
+            <i class="fas fa-users"></i> Khách hàng
+        </a>
+        <a href="{% url 'bookings:manage_customers' %}" class="nav-link-custom">
+            <i class="fas fa-user-shield"></i> Tài khoản
+        </a>        
+        <a href="{% url 'bookings:manage_active_rooms' %}" class="nav-link-custom">
+            <i class="fas fa-door-open"></i> Phòng đang hiện
+        </a>
+        
+        <div class="nav-section-title">Hệ thống</div>
+        <a href="{% url 'bookings:admin_history' %}" class="nav-link-custom">
+            <i class="fas fa-history"></i> Lịch sử hệ thống
+        </a>
+    </aside>
+
+    <main>
+        <div class="mb-4">
+            <h2 class="mb-1">Xin chào, {{ request.session.user_name }}! 👋</h2>
+            <p class="text-muted small">Cập nhật tình hình hệ thống.</p>
+        </div>
+
+        <div class="row g-4 mb-5">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h6 class="text-muted mb-2">Tổng người dùng</h6>
+                        <h2 class="mb-0">{{ total_users }}</h2>
+                    </div>
+                    <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h6 class="text-muted mb-2">Chủ trọ</h6>
+                        <h2 class="mb-0">{{ total_landlords }}</h2>
+                    </div>
+                    <i class="fas fa-user-tie fa-2x text-success opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h6 class="text-muted mb-2">Phòng trọ</h6>
+                        <h2 class="mb-0">{{ total_rooms }}</h2>
+                    </div>
+                    <i class="fas fa-home fa-2x text-info opacity-50"></i>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div>
+                        <h6 class="text-muted mb-2">Cần duyệt</h6>
+                        <h2 class="mb-0 text-danger">{{ total_pending }}</h2>
+                    </div>
+                    <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4 mb-4" id="landlord-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-user-tie me-2 text-success"></i>Yêu cầu duyệt Chủ trọ
+                </h5>
+                <span class="badge bg-danger rounded-pill">{{ pending_requests|length }} chờ xử lý</span>
+            </div>
+
+            {% if pending_requests %}
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="text-muted small">
+                        <tr>
+                            <th>Người dùng</th>
+                            <th>Thông tin liên hệ</th>
+                            <th>Lý do đăng ký</th>
+                            <th class="text-end">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="landlord-list">
+                        {% for yc in pending_requests %}
+                        <tr class="pagination-item">
+                            <td>
+                                <div class="fw-bold">{{ yc.makh.hoten }}</div>
+                            </td>
+                            <td class="small text-muted">
+                                <i class="fas fa-envelope me-1"></i> {{ yc.makh.email }}<br>
+                                <i class="fas fa-phone me-1"></i> {{ yc.makh.sdt }}
+                            </td>
+                            <td><small class="text-muted fst-italic">"{{ yc.lydo|truncatechars:50 }}"</small></td>
+                            <td class="text-end">
+                                <a href="{% url 'bookings:approve_landlord_request' yc.mayc %}" class="btn btn-sm btn-primary me-1" title="Duyệt">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                <a href="{% url 'bookings:reject_landlord_request' yc.mayc %}" class="btn btn-sm btn-outline-danger" title="Từ chối">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div id="landlord-pagination" class="pagination-controls"></div>
+            {% else %}
+            <div class="text-center py-4 text-muted bg-light rounded">
+                <i class="fas fa-check-circle me-2"></i>Không có yêu cầu đăng ký chủ trọ nào.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card p-4 mb-5" id="room-section">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">
+                    <i class="fas fa-home me-2 text-info"></i>Phòng trọ chờ duyệt
+                </h5>
+                <span class="badge bg-warning text-dark rounded-pill">{{ pending_rooms|length }} chờ duyệt</span>
+            </div>
+
+            {% if pending_rooms %}
+            <div class="row g-3" id="room-list">
+                {% for pt in pending_rooms %}
+                <div class="col-md-6 col-lg-4 pagination-item">
+                    <div class="card h-100 border shadow-sm">
+                        <div class="position-relative">
+                            {% if pt.first_image %}
+                            <img src="{{ pt.first_image.duongdan }}" class="card-img-top" style="height: 160px; object-fit: cover;" alt="{{ pt.tenpt }}">
+                            {% else %}
+                            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 160px;">
+                                <i class="fas fa-image fa-2x opacity-50"></i>
+                            </div>
+                            {% endif %}
+                            <span class="badge bg-warning text-dark position-absolute top-0 end-0 m-2 shadow-sm">Mới</span>
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column">
+                            <h6 class="fw-bold mb-1 text-truncate" title="{{ pt.tenpt }}">{{ pt.tenpt }}</h6>
+                            <p class="small text-muted mb-3"><i class="fas fa-map-marker-alt me-1"></i>{{ pt.diachi|truncatechars:30 }}</p>
+                            
+                            <div class="mt-auto d-flex gap-2">
+                                <a href="{% url 'bookings:approve_room' pt.mapt %}" class="btn btn-success btn-sm flex-grow-1">
+                                    <i class="fas fa-check me-1"></i>Duyệt
+                                </a>
+                                <a href="{% url 'bookings:reject_room' pt.mapt %}" class="btn btn-outline-danger btn-sm flex-grow-1">
+                                    <i class="fas fa-times me-1"></i>Hủy
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="room-pagination" class="pagination-controls"></div>
+            {% else %}
+            <div class="text-center py-4 text-muted bg-light rounded">
+                <i class="fas fa-clipboard-check me-2"></i>Không có phòng trọ nào cần duyệt.
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card p-4">
+            <h5 class="mb-4 fw-bold"><i class="fas fa-history me-2 text-muted"></i>Nhật ký hoạt động gần đây</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="text-muted small text-uppercase" style="background-color: var(--bg-color);">
+                        <tr>
+                            <th class="py-3 ps-3">Đối tượng</th>
+                            <th>Loại yêu cầu</th>
+                            <th>Trạng thái</th>
+                            <th>Người xử lý</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for yc in all_requests|slice:":10" %}
+                        <tr>
+                            <td class="ps-3 fw-bold">{{ yc.makh.hoten }}</td>
+                            <td><span class="badge bg-light text-dark border">Đăng ký chủ trọ</span></td>
+                            <td>
+                                {% if yc.trangthai == 'Chờ duyệt' %}
+                                    <span class="badge bg-warning">Chờ xử lý</span>
+                                {% elif yc.trangthai == 'Đã duyệt' %}
+                                    <span class="badge bg-success">Thành công</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Đã từ chối</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ yc.nguoiduyet.hoten|default:"-" }}</td>
+                            <td class="text-muted small">{{ yc.tg_tao|date:"d/m/Y H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if all_requests %}
+            <div class="text-center mt-3">
+                <a href="{% url 'bookings:admin_history' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-4">Xem tất cả</a>
+            </div>
+            {% endif %}
+        </div>
+
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    /**
+     * Client-side Pagination Script
+     * Tự động phân trang cho danh sách mà không cần tải lại trang
+     */
+    function setupPagination(listId, paginationId, itemsPerPage) {
+        const listContainer = document.getElementById(listId);
+        if (!listContainer) return;
+
+        const items = listContainer.querySelectorAll('.pagination-item');
+        const paginationContainer = document.getElementById(paginationId);
+        const totalItems = items.length;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+        // Nếu ít item hơn số lượng 1 trang thì không cần hiện phân trang
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
+
+        let currentPage = 1;
+
+        function showPage(page) {
+            const start = (page - 1) * itemsPerPage;
+            const end = start + itemsPerPage;
+
+            items.forEach((item, index) => {
+                if (index >= start && index < end) {
+                    item.style.display = ''; // Hiện (default display)
+                } else {
+                    item.style.display = 'none'; // Ẩn
+                }
+            });
+            renderButtons();
+        }
+
+        function renderButtons() {
+            paginationContainer.innerHTML = '';
+            
+            // Nút Previous
+            const prevBtn = document.createElement('button');
+            prevBtn.innerText = '«';
+            prevBtn.className = 'page-btn';
+            prevBtn.disabled = currentPage === 1;
+            prevBtn.onclick = () => { if (currentPage > 1) { currentPage--; showPage(currentPage); }};
+            paginationContainer.appendChild(prevBtn);
+
+            // Các nút số trang
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.innerText = i;
+                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+                btn.onclick = () => { currentPage = i; showPage(currentPage); };
+                paginationContainer.appendChild(btn);
+            }
+
+            // Nút Next
+            const nextBtn = document.createElement('button');
+            nextBtn.innerText = '»';
+            nextBtn.className = 'page-btn';
+            nextBtn.disabled = currentPage === totalPages;
+            nextBtn.onclick = () => { if (currentPage < totalPages) { currentPage++; showPage(currentPage); }};
+            paginationContainer.appendChild(nextBtn);
+        }
+
+        // Khởi chạy trang đầu tiên
+        showPage(1);
+    }
+
+    // Kích hoạt phân trang sau khi load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Phân trang cho danh sách chủ trọ (5 người / trang)
+        setupPagination('landlord-list', 'landlord-pagination', 5);
+        
+        // Phân trang cho danh sách phòng trọ (6 phòng / trang - vì lưới 3 cột)
+        setupPagination('room-list', 'room-pagination', 6);
+    });
+</script>
+{% endblock %}

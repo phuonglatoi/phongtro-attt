@@ -264,7 +264,9 @@
             
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'rooms:room_list' %}">Tìm phòng</a></li>
+                    {% if request.session.user_role != 'Admin' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'rooms:room_list' %}">Tìm phòng</a></li>
+                    {% endif %}
 
                     {% if request.session.is_authenticated %}
                         {% if request.session.user_role == 'Admin' %}
@@ -303,9 +305,11 @@
                                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
                                     <i class="fas fa-user me-2"></i>Thông tin cá nhân
                                 </a></li>
+                                {% if request.session.user_role != 'Admin' %}
                                 <li><a class="dropdown-item" href="{% url 'bookings:my_bookings' %}">
                                     <i class="fas fa-calendar me-2"></i>Lịch hẹn của tôi
                                 </a></li>
+                                {% endif %}
                                 <li><a class="dropdown-item" href="{% url 'accounts:manage_devices' %}">
                                     <i class="fas fa-laptop me-2"></i>Thiết bị đăng nhập
                                 </a></li>

@@ -1,0 +1,211 @@
+{% load static %}<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PhongTro.vn - Admin{% endblock %}</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- BẢNG MÀU --- */
+        :root {
+            --bg-color: #f9f4ef;
+            --headline: #020826;
+            --paragraph: #716040;
+            --button: #8c7851;
+            --button-text: #fffffe;
+            --main-white: #fffffe;
+            --highlight: #8c7851;
+            --secondary: #eaddcf;
+            --tertiary: #f25042;
+            
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-soft: 0 10px 40px -10px rgba(113, 96, 64, 0.1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--paragraph);
+        }
+
+        h1, h2, h3, h4, h5, h6, .navbar-brand {
+            color: var(--headline) !important;
+            font-weight: 700;
+        }
+
+        /* Navbar Styling */
+        .navbar {
+            background-color: var(--main-white);
+            box-shadow: var(--shadow-soft);
+            padding: 0.8rem 2rem;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            color: var(--button) !important;
+        }
+
+        /* Nút Icon (Chuông, Thư) */
+        .nav-icon-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            color: var(--paragraph);
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.2s;
+            margin-right: 0.5rem;
+        }
+        .nav-icon-btn:hover {
+            background-color: var(--secondary);
+            color: var(--headline);
+        }
+
+        /* Avatar nhỏ trên Header */
+        .user-avatar-sm {
+            width: 35px;
+            height: 35px;
+            background-color: var(--headline); /* Màu nền đậm */
+            color: var(--main-white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: 2px solid var(--secondary);
+        }
+
+        /* Dropdown User */
+        .user-dropdown-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 30px;
+            transition: all 0.2s;
+        }
+        .user-dropdown-toggle:hover {
+            background-color: rgba(234, 221, 207, 0.3); /* Màu secondary mờ */
+        }
+        
+        .dropdown-menu {
+            border: none;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-soft);
+            padding: 0.5rem;
+            margin-top: 10px !important;
+            min-width: 220px;
+        }
+
+        .dropdown-item {
+            border-radius: 8px;
+            padding: 0.6rem 1rem;
+            color: var(--paragraph);
+            font-weight: 500;
+        }
+        .dropdown-item i { width: 20px; margin-right: 10px; color: var(--button); }
+        .dropdown-item:hover { background-color: var(--bg-color); color: var(--headline); }
+        .dropdown-divider { border-color: var(--secondary); opacity: 0.5; }
+
+        /* General UI */
+        .btn { border-radius: 50px; padding: 0.5rem 1.2rem; font-weight: 600; }
+        .btn-primary { background-color: var(--button); border-color: var(--button); }
+        .btn-primary:hover { background-color: var(--headline); border-color: var(--headline); }
+        .card { border: none; border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 10px; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'rooms:home' %}">
+                <i class="fas fa-home me-2"></i>PhongTro.vn
+            </a>
+            
+            <div class="d-flex align-items-center">
+                
+                {% if request.session.is_authenticated %}
+                    <a href="{% url 'bookings:notifications' %}" class="nav-icon-btn" title="Thông báo">
+                        <i class="fas fa-bell"></i>
+                    </a>
+
+                    <a href="{% url 'bookings:inbox' %}" class="nav-icon-btn me-3" title="Tin nhắn">
+                        <i class="fas fa-envelope"></i>
+                    </a>
+
+                    <div class="dropdown">
+                        <a href="#" class="user-dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
+                            <div class="user-avatar-sm">
+                                {{ request.session.user_name|slice:":1" }}
+                            </div>
+                            <div class="d-none d-sm-block">
+                                <span class="fw-bold" style="color: var(--headline)">{{ request.session.user_name }}</span>
+                            </div>
+                            <i class="fas fa-caret-down ms-1" style="color: var(--paragraph); font-size: 0.8rem;"></i>
+                        </a>
+
+                        <ul class="dropdown-menu dropdown-menu-end animated fadeIn">
+                            <li><h6 class="dropdown-header">Tài khoản</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">
+                                <i class="fas fa-user-circle"></i>Hồ sơ cá nhân
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:manage_devices' %}">
+                                <i class="fas fa-mobile-alt"></i>Thiết bị đăng nhập
+                            </a></li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header">Bảo mật</h6></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:setup_2fa' %}">
+                                <i class="fas fa-shield-alt"></i>Xác thực 2 bước
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}">
+                                <i class="fas fa-key"></i>Đổi mật khẩu
+                            </a></li>
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger fw-bold" href="{% url 'accounts:logout' %}">
+                                <i class="fas fa-sign-out-alt text-danger"></i>Đăng xuất
+                            </a></li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-sm">Đăng nhập</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+    
+    {% if messages %}
+    <div class="position-fixed top-0 end-0 p-3" style="z-index: 9999; margin-top: 70px;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} shadow-sm border-0 rounded-3 d-flex align-items-center bg-white" role="alert" style="border-left: 4px solid var(--button);">
+            <i class="fas fa-info-circle me-2" style="color: var(--button)"></i> {{ message }}
+            <button type="button" class="btn-close ms-3" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>const csrftoken = '{{ csrf_token }}';</script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

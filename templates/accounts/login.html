@@ -45,7 +45,7 @@
                         </div>
                     </div>
                     <script>
-                        let seconds = {{ remaining_seconds }};
+                        let seconds = parseInt("{{ remaining_seconds|default:0 }}");
                         const countdown = document.getElementById('countdown');
                         const interval = setInterval(() => {
                             seconds--;

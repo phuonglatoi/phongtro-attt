@@ -223,14 +223,14 @@ def validate_message_content_inline(content):
     if not content:
         return False, 'Vui lòng nhập nội dung tin nhắn.'
 
-    if len(content) > 500:
-        return False, 'Tin nhắn không được quá 500 ký tự.'
+    if len(content) > 30:
+        return False, 'Tin nhắn không được quá 30 ký tự.'
 
     if len(content) < 2:
         return False, 'Tin nhắn phải có ít nhất 2 ký tự.'
 
     # Không cho phép: <, >, {, }, [, ], |, \, ^, ~, `, @, #, $, %, &, *, =, +
-    dangerous_chars = re.compile(r'[<>{}|\[\]\\^~`@#$%&*=+]')
+    dangerous_chars = re.compile(r'[<>{}|\[\]\\^~`#$%&*=+]')
     if dangerous_chars.search(content):
         return False, 'Tin nhắn không được chứa ký tự đặc biệt.'
 
@@ -852,7 +852,7 @@ def admin_dashboard(request):
     # Recent room submissions (all statuses)
     recent_rooms = Phongtro.objects.select_related('mant', 'mant__makh').order_by('-mapt')[:20]
 
-    return render(request, 'bookings/admin_dashboard.html', {
+    return render(request, 'quan_tri/admin_dashboard.html', {
         'pending_requests': pending_landlord_requests,
         'pending_rooms': pending_rooms,
         'rejected_rooms': rejected_rooms,
@@ -1051,3 +1051,37 @@ PhongTro.vn
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f'Failed to send listing status email to {email}: {e}')
+
+@admin_required
+def manage_customers(request):
+    """Quản lý danh sách khách hàng"""
+    from apps.accounts.models import Khachhang
+    ds_khach_hang = Khachhang.objects.all().order_by('-tg_tao')
+    return render(request, 'quan_tri/manage_customers.html', {'ds_khach_hang': ds_khach_hang})
+
+@admin_required
+def toggle_user_status(request, pk):
+    """Khóa/Mở khóa tài khoản khách hàng"""
+    from apps.accounts.models import Khachhang
+    kh = get_object_or_404(Khachhang, pk=pk)
+    # Dựa theo script.sql, cột trạng thái là BIT (True/False)
+    kh.trangthai = not kh.trangthai 
+    kh.save()
+    status_text = "kích hoạt" if kh.trangthai else "vô hiệu hóa"
+    messages.success(request, f"Đã {status_text} tài khoản {kh.hoten}")
+    return redirect('bookings:manage_customers')
+
+@admin_required
+def manage_active_rooms(request):
+    """Quản lý các phòng trọ đang hiển thị"""
+    active_rooms = Phongtro.objects.filter(trangthai__in=['Còn trống', 'Đã thuê']).select_related('mant', 'mant__makh')
+    return render(request, 'quan_tri/manage_rooms.html', {'active_rooms': active_rooms})
+
+@admin_required
+def admin_history(request):
+    """Lịch sử hệ thống (Lấy từ AUDIT_LOGS trong database)"""
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT TOP 50 * FROM AUDIT_LOGS ORDER BY CHANGED_DATE DESC")
+        logs = cursor.fetchall()
+    return render(request, 'quan_tri/history.html', {'logs': logs})

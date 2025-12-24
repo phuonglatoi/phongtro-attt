@@ -50,9 +50,18 @@ urlpatterns = [
     # ============================================
     # ADMIN ROUTES
     # ============================================
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('admin-dashboard/approve-landlord/<int:pk>/', views.approve_landlord_request, name='approve_landlord_request'),
-    path('admin-dashboard/reject-landlord/<int:pk>/', views.reject_landlord_request, name='reject_landlord_request'),
-    path('admin-dashboard/approve-room/<int:pk>/', views.approve_room, name='approve_room'),
-    path('admin-dashboard/reject-room/<int:pk>/', views.reject_room, name='reject_room'),
+    # path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('quan_tri/admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('quan_tri/approve-landlord/<int:pk>/', views.approve_landlord_request, name='approve_landlord_request'),
+    path('quan_tri/reject-landlord/<int:pk>/', views.reject_landlord_request, name='reject_landlord_request'),
+    path('quan_tri/approve-room/<int:pk>/', views.approve_room, name='approve_room'),
+    path('quan_tri/reject-room/<int:pk>/', views.reject_room, name='reject_room'),
+    # path('admin-dashboard/approve-landlord/<int:pk>/', views.approve_landlord_request, name='approve_landlord_request'),
+    # path('admin-dashboard/reject-landlord/<int:pk>/', views.reject_landlord_request, name='reject_landlord_request'),
+    # path('admin-dashboard/approve-room/<int:pk>/', views.approve_room, name='approve_room'),
+    # path('admin-dashboard/reject-room/<int:pk>/', views.reject_room, name='reject_room'),
+    path('quan_tri/customers/', views.manage_customers, name='manage_customers'),
+    path('quan_tri/customers/toggle/<int:pk>/', views.toggle_user_status, name='toggle_user_status'),
+    path('quan_tri/active-rooms/', views.manage_active_rooms, name='manage_active_rooms'),
+    path('quan_tri/history/', views.admin_history, name='admin_history'),
 ]
