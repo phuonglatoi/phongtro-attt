@@ -278,6 +278,21 @@ def login_view(request):
             # Đăng nhập thành công - clear failed attempts
             clear_failed_attempts(ip, email)
 
+            # Kiểm tra 2FA TRƯỚC KHI ghi log (2FA nằm trên bảng KHACHHANG trong schema này)
+            if khachhang.is_2fa_enabled:
+                # Lưu thông tin cần thiết vào session để xử lý sau khi 2FA thành công
+                request.session['pending_2fa_makh'] = khachhang.makh
+                request.session['pending_2fa_matk'] = taikhoan.matk
+                request.session['pending_2fa_ip'] = ip
+
+                # Lưu next_url để redirect sau khi 2FA thành công
+                next_url = request.GET.get('next') or request.POST.get('next')
+                if next_url and next_url.startswith('/'):
+                    request.session['next_url'] = next_url
+
+                return redirect('accounts:login_2fa')
+
+            # Nếu KHÔNG có 2FA, xử lý đăng nhập bình thường
             ua = request.META.get('HTTP_USER_AGENT', '')
 
             # Parse user agent for device info
@@ -320,7 +335,7 @@ def login_view(request):
                 elif 'iOS' in ua or 'iPhone' in ua:
                     os_family = 'iOS'
 
-            # Log successful login
+            # Log successful login (chỉ khi KHÔNG có 2FA)
             LoginHistory.objects.create(
                 makh=khachhang,
                 success=True,
@@ -331,11 +346,6 @@ def login_view(request):
                 os_family=os_family,
                 used_2fa=False
             )
-
-            # Kiểm tra 2FA (2FA nằm trên bảng KHACHHANG trong schema này)
-            if khachhang.is_2fa_enabled:
-                request.session['pending_2fa_makh'] = khachhang.makh
-                return redirect('accounts:login_2fa')
 
             # Reset failed login count
             taikhoan.failed_login_count = 0
@@ -407,8 +417,78 @@ def login_2fa_view(request):
 
         # Verify TOTP (2FA secret nằm trên KHACHHANG)
         if khachhang.verify_totp(otp):
-            # Clear pending 2FA session
-            del request.session['pending_2fa_makh']
+            # Lấy thông tin từ session
+            matk_id = request.session.get('pending_2fa_matk')
+            ip = request.session.get('pending_2fa_ip', get_client_ip(request))
+
+            # Cập nhật thông tin tài khoản
+            if matk_id:
+                try:
+                    taikhoan = Taikhoan.objects.get(matk=matk_id)
+                    taikhoan.failed_login_count = 0
+                    taikhoan.last_login_ip = ip
+                    taikhoan.last_login_time = timezone.now()
+                    taikhoan.save()
+                except Taikhoan.DoesNotExist:
+                    pass
+
+            # Parse user agent for device info
+            ua = request.META.get('HTTP_USER_AGENT', '')
+            device_type = 'Unknown'
+            browser_family = 'Unknown'
+            os_family = 'Unknown'
+
+            try:
+                import user_agents
+                user_agent = user_agents.parse(ua)
+                device_type = 'Mobile' if user_agent.is_mobile else ('Tablet' if user_agent.is_tablet else 'Desktop')
+                browser_family = user_agent.browser.family or 'Unknown'
+                os_family = user_agent.os.family or 'Unknown'
+            except:
+                # Fallback parsing
+                if 'Mobile' in ua or 'Android' in ua:
+                    device_type = 'Mobile'
+                elif 'Tablet' in ua or 'iPad' in ua:
+                    device_type = 'Tablet'
+                else:
+                    device_type = 'Desktop'
+
+                if 'Chrome' in ua:
+                    browser_family = 'Chrome'
+                elif 'Firefox' in ua:
+                    browser_family = 'Firefox'
+                elif 'Safari' in ua:
+                    browser_family = 'Safari'
+                elif 'Edge' in ua:
+                    browser_family = 'Edge'
+
+                if 'Windows' in ua:
+                    os_family = 'Windows'
+                elif 'Mac' in ua:
+                    os_family = 'macOS'
+                elif 'Linux' in ua:
+                    os_family = 'Linux'
+                elif 'Android' in ua:
+                    os_family = 'Android'
+                elif 'iOS' in ua or 'iPhone' in ua:
+                    os_family = 'iOS'
+
+            # Ghi log đăng nhập thành công với 2FA
+            LoginHistory.objects.create(
+                makh=khachhang,
+                success=True,
+                ip_address=ip,
+                user_agent=ua,
+                device_type=device_type,
+                browser_family=browser_family,
+                os_family=os_family,
+                used_2fa=True  # Đánh dấu đã sử dụng 2FA
+            )
+
+            # Clear pending 2FA session data
+            request.session.pop('pending_2fa_makh', None)
+            request.session.pop('pending_2fa_matk', None)
+            request.session.pop('pending_2fa_ip', None)
 
             # Set user session
             request.session['matk'] = khachhang.matk.matk if khachhang.matk else None
