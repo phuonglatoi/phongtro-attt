@@ -13,12 +13,27 @@ app.autodiscover_tasks()
 
 # Scheduled tasks
 app.conf.beat_schedule = {
-    'cleanup-old-logs': {
-        'task': 'apps.security.tasks.cleanup_old_logs',
-        'schedule': crontab(hour=2, minute=0),  # 2:00 AM daily
+    # Database backup - Hàng ngày lúc 2:00 AM
+    'backup-database-daily': {
+        'task': 'backup_database_task',
+        'schedule': crontab(hour=2, minute=0),
     },
+
+    # Cleanup old logs - Hàng ngày lúc 3:00 AM
+    'cleanup-old-logs-daily': {
+        'task': 'cleanup_old_logs_task',
+        'schedule': crontab(hour=3, minute=0),
+    },
+
+    # Database health check - Mỗi giờ
+    'check-database-health': {
+        'task': 'check_database_health_task',
+        'schedule': crontab(minute=0),  # Every hour at minute 0
+    },
+
+    # Check suspicious IPs - Mỗi 30 phút
     'check-ip-reputation': {
         'task': 'apps.security.tasks.check_suspicious_ips',
-        'schedule': crontab(minute='*/30'),  # Every 30 minutes
+        'schedule': crontab(minute='*/30'),
     },
 }

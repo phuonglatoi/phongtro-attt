@@ -38,4 +38,7 @@ urlpatterns = [
     # Devices
     path('devices/', views.manage_devices_view, name='manage_devices'),
     path('devices/<int:device_id>/revoke/', views.revoke_device_view, name='revoke_device'),
+
+    # Social Account Connections (optional - for managing connected accounts)
+    # Note: Main social auth URLs are in config/urls.py under 'accounts/social/'
 ]

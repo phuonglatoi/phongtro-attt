@@ -44,8 +44,17 @@ urlpatterns = [
     path('reviews/', include('apps.reviews.urls')),
     path('notifications/', include('apps.notifications.urls')),
     path('chat/', include('apps.chat.urls')),
+
+    # --- 4. Security (Protected Media Files) ---
+    path('', include('apps.security.urls')),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# ============================================
+# CUSTOM ERROR HANDLERS
+# ============================================
+handler404 = 'apps.core.views.handler404'
+handler500 = 'apps.core.views.handler500'

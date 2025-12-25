@@ -1,0 +1,132 @@
+{% extends 'quan_tri/base_admin.html' %}
+{% load static %}
+
+{% block title %}{% if action == 'add' %}Thêm người dùng{% else %}Sửa người dùng{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        padding: 2rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        margin: -2rem -2rem 2rem -2rem;
+    }
+    
+    .form-label {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 2px solid #e0e0e0;
+        padding: 0.75rem;
+        transition: all 0.3s;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+    }
+    
+    .required::after {
+        content: " *";
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-3">
+        <a href="{% url 'bookings:manage_customers' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+    
+    <div class="form-card">
+        <div class="form-header">
+            <h3 class="mb-0">
+                <i class="fas {% if action == 'add' %}fa-user-plus{% else %}fa-user-edit{% endif %} me-2"></i>
+                {% if action == 'add' %}Thêm người dùng mới{% else %}Chỉnh sửa người dùng{% endif %}
+            </h3>
+        </div>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required">Họ tên</label>
+                    <input type="text" name="hoten" class="form-control" 
+                           value="{% if user %}{{ user.hoten }}{% endif %}" 
+                           placeholder="Nhập họ tên" required>
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label required">Email</label>
+                    <input type="email" name="email" class="form-control" 
+                           value="{% if user %}{{ user.email }}{% endif %}" 
+                           placeholder="email@example.com" required>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="text" name="sdt" class="form-control" 
+                           value="{% if user %}{{ user.sdt }}{% endif %}" 
+                           placeholder="0123456789">
+                </div>
+                
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Vai trò</label>
+                    <select name="mavt" class="form-select">
+                        <option value="">-- Chọn vai trò --</option>
+                        {% for vt in vaitro_list %}
+                        <option value="{{ vt.mavt }}" 
+                                {% if user and user.mavt.mavt == vt.mavt %}selected{% endif %}>
+                            {{ vt.tenvt }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label {% if action == 'add' %}required{% endif %}">
+                    Mật khẩu {% if action == 'edit' %}(để trống nếu không đổi){% endif %}
+                </label>
+                <input type="password" name="matkhau" class="form-control" 
+                       placeholder="Nhập mật khẩu" 
+                       {% if action == 'add' %}required{% endif %}>
+                {% if action == 'edit' %}
+                <small class="text-muted">Chỉ nhập mật khẩu mới nếu muốn thay đổi</small>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex gap-2 mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-2"></i>
+                    {% if action == 'add' %}Thêm người dùng{% else %}Cập nhật{% endif %}
+                </button>
+                <a href="{% url 'bookings:manage_customers' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times me-2"></i>Hủy
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

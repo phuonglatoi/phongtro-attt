@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}404 - Không Tìm Thấy Trang{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Không Tìm Thấy Trang</h4>
+                </div>
+                <div class="card-body text-center">
+                    <h1 class="display-1 text-warning">404</h1>
+                    <h3>Oops! Trang không tồn tại</h3>
+                    <p class="text-muted">
+                        Trang bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.
+                    </p>
+                    <div class="my-4">
+                        <i class="fas fa-search text-muted" style="font-size: 5rem; opacity: 0.3;"></i>
+                    </div>
+                    <p class="text-muted">
+                        Có thể bạn đã nhập sai địa chỉ hoặc trang đã được di chuyển.
+                    </p>
+                    <hr>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="{% url 'rooms:home' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-home"></i> Về Trang Chủ
+                        </a>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary btn-lg">
+                            <i class="fas fa-arrow-left"></i> Quay Lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto redirect to home after 10 seconds
+setTimeout(function() {
+    window.location.href = "{% url 'rooms:home' %}";
+}, 10000);
+</script>
+{% endblock %}
+

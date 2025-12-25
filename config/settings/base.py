@@ -98,6 +98,9 @@ MIDDLEWARE = [
     # 'apps.security.middleware.waf.WAFMiddleware',
     'apps.security.middleware.audit.AuditMiddleware',
     'apps.security.middleware.device_tracking.DeviceTrackingMiddleware',
+
+    # 404 redirect middleware (must be last)
+    'apps.core.middleware.Custom404Middleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -287,4 +290,62 @@ SILENCED_SYSTEM_CHECKS = [
 
 MESSAGE_TAGS = {
     messages.ERROR: 'danger',
+}
+
+
+# ======================================================
+# AUTHENTICATION BACKENDS
+# ======================================================
+
+AUTHENTICATION_BACKENDS = [
+    # Django default
+    'django.contrib.auth.backends.ModelBackend',
+
+    # Allauth
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+
+# ======================================================
+# DJANGO ALLAUTH SETTINGS
+# ======================================================
+
+# Account settings
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'  # Cho phép đăng nhập bằng username hoặc email
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'optional'  # 'mandatory', 'optional', 'none'
+ACCOUNT_USERNAME_REQUIRED = True
+ACCOUNT_SIGNUP_EMAIL_ENTER_TWICE = False
+ACCOUNT_UNIQUE_EMAIL = True
+
+# Login/Logout URLs
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_ON_GET = False  # Yêu cầu POST để logout (bảo mật hơn)
+
+# Social account settings
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Tự động tạo account khi login lần đầu
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_LOGIN_ON_GET = True  # Redirect trực tiếp đến Google (không cần trang xác nhận)
+
+# Custom adapters
+ACCOUNT_ADAPTER = 'apps.accounts.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'apps.accounts.adapters.CustomSocialAccountAdapter'
+
+# Google OAuth Provider
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+        # NOTE: APP config is in database (SocialApp model)
+        # Do NOT define 'APP' here to avoid MultipleObjectsReturned error
+        'VERIFIED_EMAIL': True,  # Tin tưởng email từ Google đã verified
+    }
 }

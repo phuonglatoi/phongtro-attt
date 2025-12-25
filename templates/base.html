@@ -277,6 +277,10 @@
                         <li class="nav-item"><a class="nav-link" href="{% url 'bookings:landlord_dashboard' %}">
                             <i class="fas fa-home"></i> Quản lý
                         </a></li>
+                        {% elif request.session.user_role == 'Khách hàng' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'bookings:customer_dashboard' %}">
+                            <i class="fas fa-user"></i> Dashboard
+                        </a></li>
                         {% else %}
                         <li class="nav-item"><a class="nav-link" href="{% url 'bookings:request_landlord' %}">
                             Đăng tin

@@ -271,6 +271,18 @@ SCAN_UPLOADED_FILES = config('SCAN_UPLOADED_FILES', default=False, cast=bool)
 MEDIA_ROOT_PERMISSIONS = 0o755  # rwxr-xr-x (no execute for files)
 
 # ============================================
+# 🔐 PROTECTED MEDIA FILES
+# ============================================
+# Sử dụng Nginx X-Accel-Redirect để serve file (hiệu suất cao)
+USE_X_ACCEL_REDIRECT = config('USE_X_ACCEL_REDIRECT', default=True, cast=bool)
+
+# Thời gian hết hạn của signed URL (giây)
+SIGNED_URL_EXPIRY = 3600  # 1 giờ
+
+# Cho phép truy cập công khai ảnh phòng trọ (nếu False, phải đăng nhập mới xem)
+ALLOW_PUBLIC_ROOM_IMAGES = config('ALLOW_PUBLIC_ROOM_IMAGES', default=True, cast=bool)
+
+# ============================================
 # 🛡️ WEB APPLICATION FIREWALL (WAF)
 # ============================================
 WAF_ENABLED = True

@@ -67,18 +67,47 @@
         font-weight: 700;
     }
 
-    /* Stats Cards */
+    /* Stats Cards - Đồng bộ với Landlord/Customer */
     .stat-card {
-        background: var(--main-white);
-        border-radius: var(--radius-lg);
-        padding: 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        transition: transform 0.3s;
-        box-shadow: var(--shadow-soft);
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        height: 100%;
     }
-    .stat-card:hover { transform: translateY(-5px); }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+    }
+
+    .stat-card.blue {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+    }
+
+    .stat-card.yellow {
+        background: linear-gradient(135deg, #ffc107 0%, #ff9800 100%);
+        color: #000;
+    }
+
+    .stat-card.green {
+        background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+        color: white;
+    }
+
+    .stat-card h1 {
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .stat-card p {
+        font-size: 1rem;
+        margin: 0;
+        opacity: 0.95;
+    }
     
     /* Pagination Controls */
     .pagination-controls {
@@ -128,11 +157,11 @@
         </a>
         <a href="{% url 'bookings:manage_customers' %}" class="nav-link-custom">
             <i class="fas fa-user-shield"></i> Tài khoản
-        </a>        
+        </a>
         <a href="{% url 'bookings:manage_active_rooms' %}" class="nav-link-custom">
             <i class="fas fa-door-open"></i> Phòng đang hiện
         </a>
-        
+
         <div class="nav-section-title">Hệ thống</div>
         <a href="{% url 'bookings:admin_history' %}" class="nav-link-custom">
             <i class="fas fa-history"></i> Lịch sử hệ thống
@@ -145,41 +174,30 @@
             <p class="text-muted small">Cập nhật tình hình hệ thống.</p>
         </div>
 
-        <div class="row g-4 mb-5">
+        <!-- Stats Cards Row - Đồng bộ với Landlord/Customer -->
+        <div class="row g-3 mb-4">
             <div class="col-md-3">
-                <div class="stat-card">
-                    <div>
-                        <h6 class="text-muted mb-2">Tổng người dùng</h6>
-                        <h2 class="mb-0">{{ total_users }}</h2>
-                    </div>
-                    <i class="fas fa-users fa-2x text-primary opacity-50"></i>
+                <div class="stat-card blue">
+                    <h1>{{ total_users }}</h1>
+                    <p>Tổng người dùng</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card">
-                    <div>
-                        <h6 class="text-muted mb-2">Chủ trọ</h6>
-                        <h2 class="mb-0">{{ total_landlords }}</h2>
-                    </div>
-                    <i class="fas fa-user-tie fa-2x text-success opacity-50"></i>
+                <div class="stat-card yellow">
+                    <h1>{{ total_landlords }}</h1>
+                    <p>Chủ trọ</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card">
-                    <div>
-                        <h6 class="text-muted mb-2">Phòng trọ</h6>
-                        <h2 class="mb-0">{{ total_rooms }}</h2>
-                    </div>
-                    <i class="fas fa-home fa-2x text-info opacity-50"></i>
+                <div class="stat-card green">
+                    <h1>{{ total_rooms }}</h1>
+                    <p>Phòng trọ</p>
                 </div>
             </div>
             <div class="col-md-3">
-                <div class="stat-card">
-                    <div>
-                        <h6 class="text-muted mb-2">Cần duyệt</h6>
-                        <h2 class="mb-0 text-danger">{{ total_pending }}</h2>
-                    </div>
-                    <i class="fas fa-bell fa-2x text-danger opacity-50"></i>
+                <div class="stat-card" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); color: white;">
+                    <h1>{{ total_pending }}</h1>
+                    <p>Cần duyệt</p>
                 </div>
             </div>
         </div>

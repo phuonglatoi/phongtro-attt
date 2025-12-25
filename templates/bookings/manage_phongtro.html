@@ -47,24 +47,33 @@
                 <!-- Only show status change for approved rooms -->
                 {% if phongtro.trangthai == 'Còn trống' or phongtro.trangthai == 'Đã thuê' or phongtro.trangthai == 'Đang sửa chữa' %}
                 <div class="card-footer">
-                    <form method="post" action="{% url 'bookings:update_phongtro_status' pk=phongtro.mapt %}" class="d-inline">
-                        {% csrf_token %}
-                        <select name="trangthai" class="form-select form-select-sm d-inline-block" style="width: auto;"
-                                onchange="this.form.submit()">
-                            <option value="Còn trống" {% if phongtro.trangthai == 'Còn trống' %}selected{% endif %}>Còn trống</option>
-                            <option value="Đã thuê" {% if phongtro.trangthai == 'Đã thuê' %}selected{% endif %}>Đã thuê</option>
-                            <option value="Đang sửa chữa" {% if phongtro.trangthai == 'Đang sửa chữa' %}selected{% endif %}>Đang sửa chữa</option>
-                        </select>
-                    </form>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <form method="post" action="{% url 'bookings:update_phongtro_status' pk=phongtro.mapt %}" class="d-inline">
+                            {% csrf_token %}
+                            <select name="trangthai" class="form-select form-select-sm d-inline-block" style="width: auto;"
+                                    onchange="this.form.submit()">
+                                <option value="Còn trống" {% if phongtro.trangthai == 'Còn trống' %}selected{% endif %}>Còn trống</option>
+                                <option value="Đã thuê" {% if phongtro.trangthai == 'Đã thuê' %}selected{% endif %}>Đã thuê</option>
+                                <option value="Đang sửa chữa" {% if phongtro.trangthai == 'Đang sửa chữa' %}selected{% endif %}>Đang sửa chữa</option>
+                            </select>
+                        </form>
+                        <a href="{% url 'bookings:edit_phongtro' pk=phongtro.mapt %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Sửa
+                        </a>
+                    </div>
                 </div>
                 {% elif phongtro.trangthai == 'Chờ duyệt' %}
                 <div class="card-footer bg-warning bg-opacity-25">
-                    <small class="text-muted"><i class="fas fa-hourglass-half me-1"></i>Đang chờ xét duyệt...</small>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted"><i class="fas fa-hourglass-half me-1"></i>Đang chờ xét duyệt...</small>
+                        <a href="{% url 'bookings:edit_phongtro' pk=phongtro.mapt %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-edit me-1"></i>Sửa
+                        </a>
+                    </div>
                 </div>
                 {% elif phongtro.trangthai == 'Từ chối' %}
                 <div class="card-footer bg-danger bg-opacity-10">
-                    <a href="#" class="btn btn-outline-primary btn-sm"
-                       onclick="alert('Chức năng sửa phòng đang phát triển');">
+                    <a href="{% url 'bookings:edit_phongtro' pk=phongtro.mapt %}" class="btn btn-outline-primary btn-sm">
                         <i class="fas fa-edit me-1"></i>Sửa và gửi lại
                     </a>
                 </div>

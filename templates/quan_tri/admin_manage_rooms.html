@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Quản lý nhà trọ - PhongTro.vn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rooms-table {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+    
+    .table-header {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: white;
+        padding: 1.5rem;
+        font-weight: 700;
+        font-size: 1.2rem;
+    }
+    
+    .table-header i {
+        margin-right: 0.5rem;
+    }
+    
+    .room-row {
+        border-bottom: 1px solid #eee;
+        padding: 1rem;
+        transition: background 0.2s;
+    }
+    
+    .room-row:hover {
+        background: #f8f9fa;
+    }
+    
+    .room-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    
+    .room-image-placeholder {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+    
+    .badge-status {
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .badge-available { background: #198754; color: white; }
+    .badge-rented { background: #dc3545; color: white; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2><i class="fas fa-home me-2"></i>Quản lý nhà trọ</h2>
+            <p class="text-muted">Tổng số: {{ total_rooms }} phòng trọ</p>
+        </div>
+        <a href="{% url 'bookings:admin_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Quay lại
+        </a>
+    </div>
+    
+    <div class="rooms-table">
+        <div class="table-header">
+            <i class="fas fa-list"></i>Danh sách phòng trọ
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th>Hình ảnh</th>
+                        <th>Thông tin phòng</th>
+                        <th>Chủ trọ</th>
+                        <th>Giá thuê</th>
+                        <th>Diện tích</th>
+                        <th>Trạng thái</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for room in all_rooms %}
+                    <tr class="room-row">
+                        <td>
+                            {% if room.first_image %}
+                                <img src="{{ room.first_image.url_hinhanh }}" alt="Room" class="room-image">
+                            {% else %}
+                                <div class="room-image-placeholder">
+                                    <i class="fas fa-image fa-2x"></i>
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ room.mant.tennhatro }}</strong><br>
+                            <small class="text-muted">Mã phòng: {{ room.mapt }}</small><br>
+                            <small class="text-muted">{{ room.mant.diachi }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ room.mant.makh.hoten }}</strong><br>
+                            <small class="text-muted">{{ room.mant.makh.email }}</small>
+                        </td>
+                        <td>
+                            <strong class="text-danger">{{ room.giathue|floatformat:0 }}đ</strong>/tháng
+                        </td>
+                        <td>{{ room.dientich }}m²</td>
+                        <td>
+                            {% if room.trangthai == 'Còn trống' %}
+                                <span class="badge-status badge-available">Còn trống</span>
+                            {% else %}
+                                <span class="badge-status badge-rented">Đã thuê</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end">
+                            <a href="{% url 'bookings:admin_delete_room' room.mapt %}"
+                               class="btn btn-sm btn-danger"
+                               title="Xóa">
+                                <i class="fas fa-trash me-1"></i>Xóa
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center py-4 text-muted">
+                            Chưa có phòng trọ nào được đăng.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

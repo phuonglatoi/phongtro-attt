@@ -560,6 +560,39 @@ def landlord_dashboard(request):
 
 
 @login_required_custom
+def customer_dashboard(request):
+    """Bảng điều khiển khách hàng"""
+    khachhang = get_current_khachhang(request)
+
+    if not khachhang:
+        return redirect('accounts:login')
+
+    # Get customer's appointments
+    my_appointments = Henxemtro.objects.filter(
+        makh=khachhang
+    ).select_related('mapt', 'mapt__mant').order_by('-ngayhen')
+
+    # Get customer's rentals (if any)
+    my_rentals = Thuetro.objects.filter(
+        makh=khachhang
+    ).select_related('mapt', 'mapt__mant').order_by('-ngaybatdau')
+
+    # Get customer's reviews
+    my_reviews = Danhgia.objects.filter(
+        makh=khachhang
+    ).select_related('mapt').order_by('-tg_tao')
+
+    # Get favorite rooms (if implemented)
+    # favorite_rooms = ...
+
+    return render(request, 'bookings/customer_dashboard.html', {
+        'my_appointments': my_appointments,
+        'my_rentals': my_rentals,
+        'my_reviews': my_reviews,
+    })
+
+
+@login_required_custom
 def manage_nhatro(request):
     """Quản lý nhà trọ"""
     khachhang = get_current_khachhang(request)
@@ -765,6 +798,113 @@ def create_phongtro(request, nhatro_id):
 
 
 @login_required_custom
+def edit_phongtro(request, pk):
+    """Chỉnh sửa phòng trọ"""
+    from apps.rooms.models import Hinhanh
+    import os
+    from django.conf import settings
+
+    khachhang = get_current_khachhang(request)
+    phongtro = get_object_or_404(Phongtro, pk=pk)
+
+    # Check ownership
+    if phongtro.mant.makh != khachhang:
+        messages.error(request, 'Bạn không có quyền chỉnh sửa phòng trọ này.')
+        return redirect('bookings:landlord_dashboard')
+
+    if request.method == 'POST':
+        phongtro.tenpt = bleach.clean(request.POST.get('tenpt', ''), strip=True)
+        phongtro.mota = bleach.clean(request.POST.get('mota', ''), strip=True)
+        phongtro.dientich = request.POST.get('dientich', 0) or 0
+        phongtro.giatien = request.POST.get('giatien', 0) or 0
+        phongtro.songuoio = request.POST.get('songuoio', 0) or 0
+
+        if not phongtro.tenpt or not phongtro.giatien:
+            messages.error(request, 'Vui lòng nhập đầy đủ thông tin.')
+            return render(request, 'bookings/phongtro_form.html', {
+                'nhatro': phongtro.mant,
+                'phongtro': phongtro,
+                'action': 'edit'
+            })
+
+        try:
+            # If room was approved, set back to pending after edit
+            if phongtro.trangthai in ['Còn trống', 'Đã thuê']:
+                phongtro.trangthai = 'Chờ duyệt'
+
+            phongtro.save()
+
+            # Handle new image uploads
+            images = request.FILES.getlist('images')
+            ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+            ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+            if images:
+                upload_dir = os.path.join(settings.MEDIA_ROOT, 'rooms', str(phongtro.mapt))
+                os.makedirs(upload_dir, exist_ok=True)
+
+                uploaded_count = 0
+                for image in images[:5]:
+                    ext = image.name.split('.')[-1].lower()
+                    if ext not in ALLOWED_EXTENSIONS:
+                        continue
+
+                    if image.content_type not in ALLOWED_MIME_TYPES:
+                        continue
+
+                    if image.size > MAX_FILE_SIZE:
+                        continue
+
+                    # Validate magic bytes
+                    header = image.read(8)
+                    image.seek(0)
+
+                    is_valid_image = (
+                        header[:3] == b'\xff\xd8\xff' or
+                        header[:8] == b'\x89PNG\r\n\x1a\n' or
+                        header[:6] in (b'GIF87a', b'GIF89a') or
+                        header[:4] == b'RIFF'
+                    )
+
+                    if not is_valid_image:
+                        continue
+
+                    import uuid
+                    safe_filename = f'{phongtro.mapt}_{uuid.uuid4().hex[:8]}.{ext}'
+                    filepath = os.path.join(upload_dir, safe_filename)
+
+                    with open(filepath, 'wb+') as dest:
+                        for chunk in image.chunks():
+                            dest.write(chunk)
+
+                    try:
+                        Hinhanh.objects.create(
+                            mapt=phongtro,
+                            duongdan=f'/media/rooms/{phongtro.mapt}/{safe_filename}',
+                            mota=f'Ảnh {uploaded_count+1}'
+                        )
+                        uploaded_count += 1
+                    except:
+                        pass
+
+                if uploaded_count > 0:
+                    messages.info(request, f'Đã tải lên {uploaded_count} ảnh mới.')
+
+            messages.success(request, 'Đã cập nhật phòng trọ! Vui lòng chờ Admin duyệt lại.')
+            return redirect('bookings:manage_phongtro', nhatro_id=phongtro.mant.mant)
+
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+
+    return render(request, 'bookings/phongtro_form.html', {
+        'nhatro': phongtro.mant,
+        'phongtro': phongtro,
+        'action': 'edit'
+    })
+
+
+@login_required_custom
 def update_phongtro_status(request, pk):
     """Cập nhật trạng thái phòng trọ"""
     khachhang = get_current_khachhang(request)
@@ -870,6 +1010,11 @@ def admin_dashboard(request):
     for room in pending_rooms:
         room.first_image = Hinhanh.objects.filter(mapt=room).first()
 
+    # Stats for dashboard
+    total_nhatro = Nhatro.objects.count()
+    pending_henxem_count = pending_landlord_requests.count()
+    confirmed_henxem_count = Yclamchutro.objects.filter(trangthai='Đã duyệt').count()
+
     total_users = Khachhang.objects.count()
     total_rooms = Phongtro.objects.filter(trangthai='Còn trống').count()
     total_pending = pending_rooms.count()
@@ -882,7 +1027,17 @@ def admin_dashboard(request):
     # Recent room submissions (all statuses)
     recent_rooms = Phongtro.objects.select_related('mant', 'mant__makh').order_by('-mapt')[:20]
 
-    return render(request, 'quan_tri/admin_dashboard.html', {
+    # Get pending appointments (Lịch hẹn chờ xác nhận)
+    pending_appointments = Henxemtro.objects.filter(
+        trangthai='Chờ xác nhận'
+    ).select_related('mapt', 'makh', 'mapt__mant').order_by('-ngayhen')
+
+    # Get confirmed appointments (Lịch hẹn đã xác nhận)
+    confirmed_appointments = Henxemtro.objects.filter(
+        trangthai='Đã xác nhận'
+    ).select_related('mapt', 'makh', 'mapt__mant').order_by('-ngayhen')
+
+    return render(request, 'bookings/admin_dashboard.html', {
         'pending_requests': pending_landlord_requests,
         'pending_rooms': pending_rooms,
         'rejected_rooms': rejected_rooms,
@@ -893,6 +1048,11 @@ def admin_dashboard(request):
         'recent_registrations': recent_registrations,
         'all_requests': all_landlord_requests,
         'recent_rooms': recent_rooms,
+        'total_nhatro': total_nhatro,
+        'pending_henxem_count': pending_henxem_count,
+        'confirmed_henxem_count': confirmed_henxem_count,
+        'pending_appointments': pending_appointments,
+        'confirmed_appointments': confirmed_appointments,
     })
 
 
@@ -1083,6 +1243,25 @@ PhongTro.vn
         logger.error(f'Failed to send listing status email to {email}: {e}')
 
 @admin_required
+def admin_manage_rooms(request):
+    """Admin quản lý tất cả phòng trọ đã đăng"""
+    from apps.rooms.models import Hinhanh
+
+    # Lấy tất cả phòng trọ đã được duyệt (đã đăng)
+    all_rooms = Phongtro.objects.filter(
+        trangthai='Đã duyệt'
+    ).select_related('mant', 'mant__makh').order_by('-mapt')
+
+    # Lấy ảnh đầu tiên cho mỗi phòng
+    for room in all_rooms:
+        room.first_image = Hinhanh.objects.filter(mapt=room).first()
+
+    return render(request, 'quan_tri/admin_manage_rooms.html', {
+        'all_rooms': all_rooms,
+        'total_rooms': all_rooms.count()
+    })
+
+@admin_required
 def manage_customers(request):
     """Quản lý danh sách khách hàng"""
     from apps.accounts.models import Khachhang
@@ -1095,11 +1274,135 @@ def toggle_user_status(request, pk):
     from apps.accounts.models import Khachhang
     kh = get_object_or_404(Khachhang, pk=pk)
     # Dựa theo script.sql, cột trạng thái là BIT (True/False)
-    kh.trangthai = not kh.trangthai 
+    kh.trangthai = not kh.trangthai
     kh.save()
     status_text = "kích hoạt" if kh.trangthai else "vô hiệu hóa"
     messages.success(request, f"Đã {status_text} tài khoản {kh.hoten}")
     return redirect('bookings:manage_customers')
+
+@admin_required
+def add_user(request):
+    """Thêm người dùng mới"""
+    from apps.accounts.models import Khachhang, Vaitro
+    import hashlib
+
+    if request.method == 'POST':
+        hoten = bleach.clean(request.POST.get('hoten', ''), strip=True)
+        email = bleach.clean(request.POST.get('email', ''), strip=True)
+        sdt = bleach.clean(request.POST.get('sdt', ''), strip=True)
+        matkhau = request.POST.get('matkhau', '')
+        mavt_id = request.POST.get('mavt')
+
+        # Validate
+        if not all([hoten, email, matkhau]):
+            messages.error(request, 'Vui lòng điền đầy đủ thông tin bắt buộc.')
+            return redirect('bookings:add_user')
+
+        # Check email exists
+        if Khachhang.objects.filter(email=email).exists():
+            messages.error(request, 'Email đã tồn tại trong hệ thống.')
+            return redirect('bookings:add_user')
+
+        try:
+            # Hash password
+            hashed_password = hashlib.sha256(matkhau.encode()).hexdigest()
+
+            # Get role
+            mavt = Vaitro.objects.get(pk=mavt_id) if mavt_id else None
+
+            # Create user
+            Khachhang.objects.create(
+                hoten=hoten,
+                email=email,
+                sdt=sdt,
+                matkhau=hashed_password,
+                mavt=mavt,
+                trangthai=True
+            )
+
+            messages.success(request, f'Đã thêm người dùng {hoten} thành công!')
+            return redirect('bookings:manage_customers')
+
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+            return redirect('bookings:add_user')
+
+    # GET request
+    vaitro_list = Vaitro.objects.all()
+    return render(request, 'quan_tri/user_form.html', {
+        'vaitro_list': vaitro_list,
+        'action': 'add'
+    })
+
+@admin_required
+def edit_user(request, pk):
+    """Chỉnh sửa thông tin người dùng"""
+    from apps.accounts.models import Khachhang, Vaitro
+    import hashlib
+
+    kh = get_object_or_404(Khachhang, pk=pk)
+
+    if request.method == 'POST':
+        kh.hoten = bleach.clean(request.POST.get('hoten', ''), strip=True)
+        kh.email = bleach.clean(request.POST.get('email', ''), strip=True)
+        kh.sdt = bleach.clean(request.POST.get('sdt', ''), strip=True)
+
+        # Update password if provided
+        new_password = request.POST.get('matkhau', '')
+        if new_password:
+            kh.matkhau = hashlib.sha256(new_password.encode()).hexdigest()
+
+        # Update role
+        mavt_id = request.POST.get('mavt')
+        if mavt_id:
+            kh.mavt = Vaitro.objects.get(pk=mavt_id)
+
+        try:
+            kh.save()
+            messages.success(request, f'Đã cập nhật thông tin {kh.hoten}!')
+            return redirect('bookings:manage_customers')
+        except Exception as e:
+            messages.error(request, f'Có lỗi xảy ra: {str(e)}')
+
+    vaitro_list = Vaitro.objects.all()
+    return render(request, 'quan_tri/user_form.html', {
+        'user': kh,
+        'vaitro_list': vaitro_list,
+        'action': 'edit'
+    })
+
+@admin_required
+def delete_user(request, pk):
+    """Xóa người dùng"""
+    from apps.accounts.models import Khachhang
+
+    kh = get_object_or_404(Khachhang, pk=pk)
+
+    # Prevent deleting admin
+    if kh.mavt and kh.mavt.tenvt == 'Admin':
+        messages.error(request, 'Không thể xóa tài khoản Admin!')
+        return redirect('bookings:manage_customers')
+
+    if request.method == 'POST':
+        hoten = kh.hoten
+        kh.delete()
+        messages.success(request, f'Đã xóa người dùng {hoten}!')
+        return redirect('bookings:manage_customers')
+
+    return render(request, 'quan_tri/user_confirm_delete.html', {'user': kh})
+
+@admin_required
+def admin_delete_room(request, pk):
+    """Admin xóa phòng trọ"""
+    room = get_object_or_404(Phongtro, pk=pk)
+
+    if request.method == 'POST':
+        room_name = f"Phòng {room.mapt}"
+        room.delete()
+        messages.success(request, f'Đã xóa {room_name}!')
+        return redirect('bookings:admin_manage_rooms')
+
+    return render(request, 'quan_tri/room_confirm_delete.html', {'room': room})
 
 @admin_required
 def manage_active_rooms(request):

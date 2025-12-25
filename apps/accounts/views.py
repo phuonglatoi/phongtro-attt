@@ -368,11 +368,21 @@ def login_view(request):
 
             messages.success(request, f'Chào mừng {khachhang.hoten}!')
 
-            # Redirect to 'next' URL or home
+            # Redirect to 'next' URL or dashboard based on role
             next_url = request.GET.get('next') or request.POST.get('next')
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
-            return redirect('rooms:home')
+
+            # Redirect based on user role
+            user_role = khachhang.mavt.tenvt if khachhang.mavt else None
+            if user_role == 'Admin':
+                return redirect('bookings:admin_dashboard')
+            elif user_role == 'Chủ trọ':
+                return redirect('bookings:landlord_dashboard')
+            elif user_role == 'Khách hàng':
+                return redirect('bookings:customer_dashboard')
+            else:
+                return redirect('rooms:home')
     else:
         form = LoginForm()
 
@@ -500,11 +510,21 @@ def login_2fa_view(request):
 
             messages.success(request, f'Chào mừng {khachhang.hoten}!')
 
-            # Redirect to 'next' URL or home
+            # Redirect to 'next' URL or dashboard based on role
             next_url = request.session.pop('next_url', None)
             if next_url and next_url.startswith('/'):
                 return redirect(next_url)
-            return redirect('rooms:home')
+
+            # Redirect based on user role
+            user_role = khachhang.mavt.tenvt if khachhang.mavt else None
+            if user_role == 'Admin':
+                return redirect('bookings:admin_dashboard')
+            elif user_role == 'Chủ trọ':
+                return redirect('bookings:landlord_dashboard')
+            elif user_role == 'Khách hàng':
+                return redirect('bookings:customer_dashboard')
+            else:
+                return redirect('rooms:home')
 
         messages.error(request, 'Mã OTP không hợp lệ.')
 

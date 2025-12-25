@@ -19,6 +19,16 @@ DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda request: False,
 }
 
+# ============================================
+# 🔓 DEVELOPMENT SECURITY OVERRIDES
+# ============================================
+# Tắt HTTPS requirement cho development (localhost)
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+# Session timeout dài hơn cho development (1 giờ)
+SESSION_COOKIE_AGE = 3600
+
 # Database configuration
 db_user = os.getenv('DB_USER', '')
 db_password = os.getenv('DB_PASSWORD', '')

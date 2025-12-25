@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Đăng nhập bị hủy - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="text-center mb-4">
+                <a href="{% url 'rooms:home' %}" class="text-decoration-none">
+                    <h2 class="fw-bold text-primary">🏠 PhongTro.vn</h2>
+                </a>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-5 text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-times-circle text-secondary" style="font-size: 4rem;"></i>
+                    </div>
+
+                    <h3 class="mb-3">Đăng nhập bị hủy</h3>
+                    
+                    <p class="text-muted mb-4">
+                        Bạn đã hủy quá trình đăng nhập với Google.
+                    </p>
+
+                    <div class="d-grid gap-2 mt-4">
+                        <a href="{% url 'accounts:login' %}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-arrow-left me-2"></i>Thử lại
+                        </a>
+                        <a href="{% url 'rooms:home' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Về trang chủ
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+
+    .btn-lg {
+        height: 48px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+

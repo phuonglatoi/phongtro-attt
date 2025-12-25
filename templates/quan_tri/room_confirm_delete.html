@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Xác nhận xóa phòng trọ - PhongTro.vn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-confirm-card {
+        max-width: 600px;
+        margin: 50px auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .card-header-danger {
+        background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .card-header-danger i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+    
+    .card-body {
+        padding: 2rem;
+    }
+    
+    .room-info {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin: 1rem 0;
+    }
+    
+    .room-info p {
+        margin: 0.5rem 0;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="delete-confirm-card">
+        <div class="card-header-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <h3>Xác nhận xóa phòng trọ</h3>
+        </div>
+        <div class="card-body">
+            <p class="text-center mb-3">Bạn có chắc chắn muốn xóa phòng trọ này không?</p>
+            
+            <div class="room-info">
+                <p><strong>Nhà trọ:</strong> {{ room.mant.tennhatro }}</p>
+                <p><strong>Mã phòng:</strong> {{ room.mapt }}</p>
+                <p><strong>Địa chỉ:</strong> {{ room.mant.diachi }}</p>
+                <p><strong>Giá thuê:</strong> {{ room.giathue|floatformat:0 }}đ/tháng</p>
+                <p><strong>Chủ trọ:</strong> {{ room.mant.makh.hoten }}</p>
+            </div>
+            
+            <div class="alert alert-warning">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác!
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'bookings:admin_manage_rooms' %}" class="btn btn-secondary">
+                        <i class="fas fa-times me-2"></i>Hủy
+                    </a>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Xóa phòng trọ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

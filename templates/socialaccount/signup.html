@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Hoàn tất đăng ký - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="text-center mb-4">
+                <a href="{% url 'rooms:home' %}" class="text-decoration-none">
+                    <h2 class="fw-bold text-primary">🏠 PhongTro.vn</h2>
+                </a>
+                <p class="text-muted">Hoàn tất đăng ký với Google</p>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <div class="text-center mb-4">
+                        <div class="mb-3">
+                            {% if account.get_avatar_url %}
+                            <img src="{{ account.get_avatar_url }}" alt="Avatar" class="rounded-circle" width="80" height="80">
+                            {% else %}
+                            <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px; font-size: 2rem;">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <h5 class="mb-1">{{ account.extra_data.name }}</h5>
+                        <p class="text-muted mb-0">{{ account.extra_data.email }}</p>
+                    </div>
+
+                    <form method="post" action="{% url 'socialaccount_signup' %}">
+                        {% csrf_token %}
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Vui lòng nhập tên đăng nhập để hoàn tất đăng ký
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">
+                                <i class="fas fa-user me-1"></i>Tên đăng nhập
+                            </label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.username.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Chỉ chứa chữ cái, số và @/./+/-/_
+                            </small>
+                        </div>
+
+                        {% if form.email %}
+                        <div class="mb-3">
+                            <label for="id_email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email
+                            </label>
+                            {{ form.email }}
+                            {% if form.email.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.email.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>Hoàn tất đăng ký
+                            </button>
+                            <a href="{% url 'accounts:login' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Quay lại
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-shield-alt text-success me-1"></i>
+                    Thông tin của bạn được bảo mật an toàn
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    #id_username,
+    #id_email {
+        height: 48px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    #id_username:focus,
+    #id_email:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .card {
+        border-radius: 12px;
+    }
+
+    .btn-lg {
+        height: 48px;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+</style>
+{% endblock %}
+

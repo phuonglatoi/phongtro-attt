@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Kết nối tài khoản - PhongTro.vn{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="mb-4">
+                <h2 class="fw-bold">
+                    <i class="fas fa-link me-2"></i>Kết nối tài khoản
+                </h2>
+                <p class="text-muted">Quản lý các tài khoản mạng xã hội được kết nối</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <h5 class="card-title mb-4">
+                        <i class="fab fa-google me-2 text-danger"></i>Google
+                    </h5>
+
+                    {% if form.accounts %}
+                        <div class="list-group mb-3">
+                            {% for base_account in form.accounts %}
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    {% if base_account.get_avatar_url %}
+                                    <img src="{{ base_account.get_avatar_url }}" alt="Avatar" class="rounded-circle me-3" width="40" height="40">
+                                    {% else %}
+                                    <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="fw-bold">{{ base_account.extra_data.name }}</div>
+                                        <small class="text-muted">{{ base_account.extra_data.email }}</small>
+                                    </div>
+                                </div>
+                                <form method="post" action="{% url 'socialaccount_connections' %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="account" value="{{ base_account.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc muốn ngắt kết nối tài khoản này?')">
+                                        <i class="fas fa-unlink me-1"></i>Ngắt kết nối
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Bạn chưa kết nối tài khoản Google nào
+                        </div>
+                    {% endif %}
+
+                    {% load socialaccount %}
+                    {% if not form.accounts %}
+                    <div class="d-grid">
+                        <a href="{% provider_login_url 'google' process='connect' %}" class="btn btn-outline-dark btn-lg">
+                            <i class="fab fa-google me-2"></i>Kết nối với Google
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a href="{% url 'accounts:profile' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại hồ sơ
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+    }
+
+    .list-group-item {
+        border-radius: 8px !important;
+        margin-bottom: 0.5rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .list-group-item:last-child {
+        margin-bottom: 0;
+    }
+</style>
+{% endblock %}
+
