@@ -58,9 +58,10 @@
         font-size: 0.85rem;
         font-weight: 600;
     }
-    
+
     .badge-available { background: #198754; color: white; }
     .badge-rented { background: #dc3545; color: white; }
+    .badge-maintenance { background: #ffc107; color: #000; }
 </style>
 {% endblock %}
 
@@ -107,8 +108,8 @@
                             {% endif %}
                         </td>
                         <td>
-                            <strong>{{ room.mant.tennhatro }}</strong><br>
-                            <small class="text-muted">Mã phòng: {{ room.mapt }}</small><br>
+                            <strong>{{ room.tenpt }}</strong><br>
+                            <small class="text-muted">Nhà trọ: {{ room.mant.tennt }}</small><br>
                             <small class="text-muted">{{ room.mant.diachi }}</small>
                         </td>
                         <td>
@@ -122,13 +123,18 @@
                         <td>
                             {% if room.trangthai == 'Còn trống' %}
                                 <span class="badge-status badge-available">Còn trống</span>
-                            {% else %}
+                            {% elif room.trangthai == 'Đã thuê' %}
                                 <span class="badge-status badge-rented">Đã thuê</span>
+                            {% elif room.trangthai == 'Đang sửa chữa' %}
+                                <span class="badge-status badge-maintenance">Đang sửa chữa</span>
+                            {% else %}
+                                <span class="badge-status">{{ room.trangthai }}</span>
                             {% endif %}
                         </td>
                         <td class="text-end">
                             <a href="{% url 'bookings:admin_delete_room' room.mapt %}"
-                               class="btn btn-sm btn-danger"
+                               class="btn btn-sm btn-danger delete-room-btn"
+                               data-room-name="{{ room.tenpt }}"
                                title="Xóa">
                                 <i class="fas fa-trash me-1"></i>Xóa
                             </a>
@@ -146,5 +152,26 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Xác nhận trước khi xóa phòng
+    const deleteButtons = document.querySelectorAll('.delete-room-btn');
+
+    deleteButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const roomName = this.getAttribute('data-room-name');
+            const deleteUrl = this.getAttribute('href');
+
+            if (confirm(`⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA PHÒNG "${roomName}"?\n\nHành động này KHÔNG THỂ HOÀN TÁC!`)) {
+                window.location.href = deleteUrl;
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
 

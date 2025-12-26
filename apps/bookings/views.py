@@ -1248,8 +1248,9 @@ def admin_manage_rooms(request):
     from apps.rooms.models import Hinhanh
 
     # Lấy tất cả phòng trọ đã được duyệt (đã đăng)
+    # Bao gồm: Còn trống, Đã thuê, Đang sửa chữa
     all_rooms = Phongtro.objects.filter(
-        trangthai='Đã duyệt'
+        trangthai__in=['Còn trống', 'Đã thuê', 'Đang sửa chữa']
     ).select_related('mant', 'mant__makh').order_by('-mapt')
 
     # Lấy ảnh đầu tiên cho mỗi phòng
@@ -1396,13 +1397,22 @@ def admin_delete_room(request, pk):
     """Admin xóa phòng trọ"""
     room = get_object_or_404(Phongtro, pk=pk)
 
-    if request.method == 'POST':
-        room_name = f"Phòng {room.mapt}"
-        room.delete()
-        messages.success(request, f'Đã xóa {room_name}!')
-        return redirect('bookings:admin_manage_rooms')
+    room_name = room.tenpt
+    landlord = room.mant.makh
 
-    return render(request, 'quan_tri/room_confirm_delete.html', {'room': room})
+    # Xóa phòng
+    room.delete()
+
+    # Thông báo cho chủ trọ
+    create_notification(
+        landlord,
+        'Phòng trọ đã bị xóa',
+        f'Phòng "{room_name}" đã bị Admin xóa khỏi hệ thống.',
+        'warning'
+    )
+
+    messages.success(request, f'✅ Đã xóa phòng "{room_name}" thành công!')
+    return redirect('bookings:admin_manage_rooms')
 
 @admin_required
 def manage_active_rooms(request):
