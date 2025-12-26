@@ -12,20 +12,20 @@
             {% for room in rooms %}
             <div class="col-md-4 mb-4">
                 <div class="card h-100 shadow-sm">
-                    {% if room.image %}
-                    <img src="{{ room.image.url }}" class="card-img-top" alt="{{ room.title }}" style="height: 200px; object-fit: cover;">
+                    {% if room.first_image %}
+                    <img src="{{ room.first_image.duongdan }}" class="card-img-top" alt="{{ room.tenpt }}" style="height: 200px; object-fit: cover;">
                     {% else %}
                     <div class="card-img-top bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
                         Chưa có ảnh
                     </div>
                     {% endif %}
-                    
+
                     <div class="card-body">
-                        <h5 class="card-title">{{ room.title }}</h5>
-                        <p class="card-text text-danger fw-bold">{{ room.price }} VNĐ</p>
-                        <p class="card-text"><small class="text-muted">{{ room.address }}</small></p>
-                        
-                        <a href="#" class="btn btn-primary w-100">Xem chi tiết</a>
+                        <h5 class="card-title">{{ room.tenpt }}</h5>
+                        <p class="card-text text-danger fw-bold">{{ room.giatien|floatformat:0 }} VNĐ</p>
+                        <p class="card-text"><small class="text-muted">{{ room.mant.tennt }}</small></p>
+
+                        <a href="{% url 'rooms:room_detail' room.mapt %}" class="btn btn-primary w-100">Xem chi tiết</a>
                     </div>
                 </div>
             </div>

@@ -29,14 +29,29 @@ def room_list_view(request):
     """Danh sách phòng trọ"""
     rooms = Phongtro.objects.filter(trangthai='Còn trống').select_related('mant')
 
-    # Filter by price
-    min_price = request.GET.get('min_price')
-    max_price = request.GET.get('max_price')
+    # Filter by price with validation
+    min_price = request.GET.get('min_price', '').strip()
+    max_price = request.GET.get('max_price', '').strip()
 
+    # Validate and apply min_price filter
     if min_price:
-        rooms = rooms.filter(giatien__gte=min_price)
+        try:
+            min_price_value = float(min_price)
+            if min_price_value >= 0:
+                rooms = rooms.filter(giatien__gte=min_price_value)
+        except (ValueError, TypeError):
+            # Invalid price format - ignore filter
+            pass
+
+    # Validate and apply max_price filter
     if max_price:
-        rooms = rooms.filter(giatien__lte=max_price)
+        try:
+            max_price_value = float(max_price)
+            if max_price_value >= 0:
+                rooms = rooms.filter(giatien__lte=max_price_value)
+        except (ValueError, TypeError):
+            # Invalid price format - ignore filter
+            pass
 
     # Attach first image to each room
     rooms = list(rooms)
@@ -149,6 +164,10 @@ def search_view(request):
 
     rooms = Phongtro.objects.filter(trangthai='Còn trống', tenpt__icontains=query) | \
             Phongtro.objects.filter(trangthai='Còn trống', mota__icontains=query)
+
+    # Attach first image to each room
+    for room in rooms:
+        room.first_image = Hinhanh.objects.filter(mapt=room).first()
 
     return render(request, 'rooms/search_results.html', {
         'rooms': rooms,
