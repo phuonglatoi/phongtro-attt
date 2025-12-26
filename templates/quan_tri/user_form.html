@@ -69,25 +69,28 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label required">Họ tên</label>
-                    <input type="text" name="hoten" class="form-control" 
-                           value="{% if user %}{{ user.hoten }}{% endif %}" 
-                           placeholder="Nhập họ tên" required>
+                    <input type="text" name="hoten" class="form-control"
+                           value="{% if user %}{{ user.hoten }}{% endif %}"
+                           placeholder="Nhập họ tên"
+                           maxlength="200" minlength="2" required>
                 </div>
-                
+
                 <div class="col-md-6 mb-3">
                     <label class="form-label required">Email</label>
-                    <input type="email" name="email" class="form-control" 
-                           value="{% if user %}{{ user.email }}{% endif %}" 
-                           placeholder="email@example.com" required>
+                    <input type="email" name="email" class="form-control"
+                           value="{% if user %}{{ user.email }}{% endif %}"
+                           placeholder="email@example.com"
+                           maxlength="254" required>
                 </div>
             </div>
-            
+
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Số điện thoại</label>
-                    <input type="text" name="sdt" class="form-control" 
-                           value="{% if user %}{{ user.sdt }}{% endif %}" 
-                           placeholder="0123456789">
+                    <input type="text" name="sdt" class="form-control"
+                           value="{% if user %}{{ user.sdt }}{% endif %}"
+                           placeholder="0123456789"
+                           maxlength="15" pattern="(\+84|0)[0-9]{9}">
                 </div>
                 
                 <div class="col-md-6 mb-3">

@@ -37,8 +37,9 @@
                         
                         <div class="mb-3">
                             <label for="ghichu" class="form-label">Ghi chú</label>
-                            <textarea class="form-control" id="ghichu" name="ghichu" rows="3" 
-                                    placeholder="Nhập ghi chú (2-30 ký tự, không ký tự đặc biệt)...">{{ old_ghichu|default:'' }}</textarea>
+                            <textarea class="form-control" id="ghichu" name="ghichu" rows="3"
+                                    placeholder="Nhập ghi chú (2-30 ký tự, không ký tự đặc biệt)..."
+                                    maxlength="500">{{ old_ghichu|default:'' }}</textarea>
                         </div>
                         
                         <div class="d-grid gap-2">

@@ -32,7 +32,8 @@
                             <label for="tenpt" class="form-label">Tên phòng <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="tenpt" name="tenpt"
                                    value="{% if phongtro %}{{ phongtro.tenpt }}{% endif %}"
-                                   placeholder="Ví dụ: Phòng 101, Phòng trọ A1..." required>
+                                   placeholder="Ví dụ: Phòng 101, Phòng trọ A1..."
+                                   maxlength="200" minlength="3" required>
                         </div>
 
                         <div class="row">
@@ -59,7 +60,8 @@
                         <div class="mb-3">
                             <label for="mota" class="form-label">Mô tả phòng</label>
                             <textarea class="form-control" id="mota" name="mota" rows="4"
-                                      placeholder="Mô tả về phòng: tiện nghi, nội thất...">{% if phongtro %}{{ phongtro.mota }}{% endif %}</textarea>
+                                      placeholder="Mô tả về phòng: tiện nghi, nội thất..."
+                                      maxlength="2000">{% if phongtro %}{{ phongtro.mota }}{% endif %}</textarea>
                         </div>
 
                         <!-- Image Upload Section -->
