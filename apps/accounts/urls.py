@@ -19,6 +19,7 @@ urlpatterns = [
     path('password/change/', views.password_change_view, name='password_change'),
     path('password/reset/', views.password_reset_view, name='password_reset'),
     path('password/reset/verify-otp/', views.password_reset_verify_otp_view, name='password_reset_verify_otp'),
+    path('password/reset/verify-security-question/', views.password_reset_verify_security_question_view, name='password_reset_verify_security_question'),
     path('password/reset/resend-otp/', views.password_reset_resend_otp_view, name='password_reset_resend_otp'),
     path('password/reset/confirm/', views.password_reset_confirm_view, name='password_reset_confirm'),
     path('password/reset/done/', views.password_reset_done_view, name='password_reset_done'),

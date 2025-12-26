@@ -1108,10 +1108,10 @@ def password_reset_verify_otp_view(request):
             return redirect('accounts:password_reset')
 
         if entered_otp == stored_otp:
-            # Đúng OTP - cho phép đặt mật khẩu mới
-            request.session['password_reset_verified'] = True
-            messages.success(request, 'Xác nhận thành công! Vui lòng đặt mật khẩu mới.')
-            return redirect('accounts:password_reset_confirm')
+            # Đúng OTP - chuyển sang bước verify security question
+            request.session['password_reset_otp_verified'] = True
+            messages.success(request, 'Xác nhận OTP thành công!')
+            return redirect('accounts:password_reset_verify_security_question')
         else:
             request.session['password_reset_attempts'] = attempts + 1
             remaining_attempts = 5 - (attempts + 1)
@@ -1124,6 +1124,71 @@ def password_reset_verify_otp_view(request):
     return render(request, 'accounts/password_reset_verify_otp.html', {
         'masked_email': masked_email,
         'remaining_seconds': remaining_seconds
+    })
+
+
+@require_http_methods(['GET', 'POST'])
+@ratelimit(key='ip', rate='5/h', method='POST')
+def password_reset_verify_security_question_view(request):
+    """Bước 2.5: Xác thực câu hỏi bảo mật"""
+    email = request.session.get('password_reset_email')
+    otp_verified = request.session.get('password_reset_otp_verified')
+
+    if not email or not otp_verified:
+        messages.error(request, 'Phiên làm việc đã hết hạn. Vui lòng thử lại.')
+        return redirect('accounts:password_reset')
+
+    try:
+        khachhang = Khachhang.objects.get(email=email)
+    except Khachhang.DoesNotExist:
+        messages.error(request, 'Có lỗi xảy ra. Vui lòng thử lại.')
+        return redirect('accounts:password_reset')
+
+    # Kiểm tra xem user có thiết lập security question chưa
+    try:
+        security_q = SecurityQuestion.objects.get(makh=khachhang)
+    except SecurityQuestion.DoesNotExist:
+        # Nếu chưa có security question, bỏ qua bước này
+        request.session['password_reset_verified'] = True
+        messages.info(request, 'Bạn chưa thiết lập câu hỏi bảo mật. Vui lòng đặt mật khẩu mới.')
+        return redirect('accounts:password_reset_confirm')
+
+    if request.method == 'POST':
+        answer = request.POST.get('security_answer', '').strip()
+        attempts = request.session.get('password_reset_sq_attempts', 0)
+
+        if not answer:
+            messages.error(request, 'Vui lòng nhập câu trả lời.')
+            return render(request, 'accounts/password_reset_verify_security_question.html', {
+                'security_question': SecurityQuestion.get_question_label(security_q.question_key)
+            })
+
+        # Giới hạn số lần thử
+        if attempts >= 3:
+            messages.error(request, 'Bạn đã nhập sai quá nhiều lần. Vui lòng thử lại sau.')
+            # Xóa session
+            for key in ['password_reset_email', 'password_reset_otp_verified', 'password_reset_sq_attempts']:
+                request.session.pop(key, None)
+            return redirect('accounts:password_reset')
+
+        # Verify answer
+        if security_q.verify_answer(answer):
+            # Đúng - cho phép đặt mật khẩu mới
+            request.session['password_reset_verified'] = True
+            request.session.pop('password_reset_sq_attempts', None)
+            messages.success(request, 'Xác minh thành công! Vui lòng đặt mật khẩu mới.')
+            return redirect('accounts:password_reset_confirm')
+        else:
+            # Sai - tăng attempts
+            request.session['password_reset_sq_attempts'] = attempts + 1
+            remaining_attempts = 3 - (attempts + 1)
+            messages.error(request, f'Câu trả lời không đúng. Còn {remaining_attempts} lần thử.')
+            return render(request, 'accounts/password_reset_verify_security_question.html', {
+                'security_question': SecurityQuestion.get_question_label(security_q.question_key)
+            })
+
+    return render(request, 'accounts/password_reset_verify_security_question.html', {
+        'security_question': SecurityQuestion.get_question_label(security_q.question_key)
     })
 
 
