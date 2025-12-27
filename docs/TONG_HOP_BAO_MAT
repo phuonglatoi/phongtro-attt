@@ -1,0 +1,408 @@
+# 🔐 TỔNG HỢP CÁC LOẠI BẢO MẬT TRONG HỆ THỐNG
+
+---
+
+## 📊 PHẦN 1: BẢO MẬT CƠ SỞ DỮ LIỆU (SQL Server)
+
+### 1.1 Always Encrypted (Mã hóa cột)
+
+| Cột được mã hóa | Bảng | Loại mã hóa |
+|-----------------|------|-------------|
+| `CCCD` | KHACHHANG | Deterministic |
+| `SDT` | KHACHHANG | Randomized |
+| `PASSWORD_HASH` | TAIKHOAN | Binary |
+
+**📍 Vị trí cấu hình:**
+```
+config/settings/development.py - Dòng 47
+full_extra_params = base_params + 'ColumnEncryption=Enabled;'
+```
+
+---
+
+### 1.2 Transparent Data Encryption (TDE)
+
+> Mã hóa toàn bộ file database (.mdf, .ldf) trên ổ đĩa
+
+**📍 Vị trí:** SQL Server Management Studio
+```sql
+ALTER DATABASE QuanLyChoThuePhongTro SET ENCRYPTION ON;
+```
+
+---
+
+### 1.3 Dynamic Data Masking
+
+| Cột | Kiểu masking | Kết quả |
+|-----|--------------|---------|
+| `SDT` | partial(4,"***",3) | 0901***234 |
+| `EMAIL` | email() | n***@gmail.com |
+| `CCCD` | default() | xxxx |
+
+**📍 Vị trí:** SQL Server (chạy script trong SSMS)
+```sql
+ALTER TABLE KHACHHANG ALTER COLUMN SDT ADD MASKED WITH (FUNCTION = 'partial(4,"***",3)');
+ALTER TABLE KHACHHANG ALTER COLUMN EMAIL ADD MASKED WITH (FUNCTION = 'email()');
+```
+
+---
+
+### 1.4 Row-Level Security (RLS)
+
+> Chủ trọ chỉ xem được phòng của mình
+
+**📍 Vị trí:** SQL Server (chạy script trong SSMS)
+```sql
+CREATE FUNCTION dbo.fn_PhongTroFilter(@MACT INT)
+RETURNS TABLE WITH SCHEMABINDING
+AS RETURN SELECT 1 AS result WHERE @MACT = CAST(SESSION_CONTEXT(N'MACT') AS INT);
+
+CREATE SECURITY POLICY PhongTroFilter
+ADD FILTER PREDICATE dbo.fn_PhongTroFilter(MACT) ON dbo.PHONGTRO;
+```
+
+---
+
+### 1.5 Stored Procedures (Chống SQL Injection)
+
+**📍 Vị trí:** SQL Server
+```sql
+CREATE PROCEDURE SP_SECURE_LOGIN
+    @Email NVARCHAR(100),
+    @PasswordHash VARBINARY(64)
+AS BEGIN
+    SELECT * FROM TAIKHOAN WHERE USERNAME = @Email AND PASSWORD_HASH = @PasswordHash;
+END
+```
+
+---
+
+### 1.6 Audit Triggers
+
+**📍 Vị trí:** SQL Server
+```sql
+CREATE TRIGGER TRG_AUDIT_TAIKHOAN ON TAIKHOAN
+AFTER UPDATE, DELETE AS BEGIN
+    INSERT INTO AUDIT_LOGS (TABLE_NAME, ACTION, OLD_DATA, NEW_DATA, CHANGED_DATE)
+    SELECT 'TAIKHOAN', 'UPDATE', 
+           (SELECT * FROM deleted FOR JSON PATH),
+           (SELECT * FROM inserted FOR JSON PATH),
+           GETDATE();
+END
+```
+
+---
+
+### 1.7 Backup Database
+
+**📍 Vị trí:**
+| File | Mô tả |
+|------|-------|
+| `scripts/backup_database.py` | Script backup tự động |
+| `config/celery.py` dòng 16-20 | Scheduled backup 2:00 AM |
+| `backups/` | Thư mục lưu file .bak |
+
+---
+
+### 1.8 ⚡ GIỚI HẠN TÀI NGUYÊN (Resource Governor)
+
+#### A. Cấu hình trong Django (Application Level)
+
+| Giới hạn | Giá trị | Vị trí |
+|----------|---------|--------|
+| **Connection Pool** | 60 giây | `config/settings/production.py` dòng 31: `CONN_MAX_AGE = 60` |
+| **Session Timeout** | 15 phút | `config/settings/security.py` dòng 51: `SESSION_COOKIE_AGE = 900` |
+| **Max Concurrent Sessions** | 3 thiết bị | `config/settings/security.py` dòng 243: `MAX_CONCURRENT_SESSIONS = 3` |
+| **Redis Socket Timeout** | 5 giây | `config/settings/production.py` dòng 44-45 |
+
+#### B. Rate Limiting (Giới hạn số request/phút)
+
+**📍 Vị trí:** `config/settings/security.py` dòng 173-184
+
+| Hành động | Giới hạn | Cấu hình |
+|-----------|----------|----------|
+| Login | 5 lần/phút | `RATELIMIT_LOGIN = '5/m'` |
+| Register | 3 lần/10 phút | `RATELIMIT_REGISTER = '3/10m'` |
+| API Request | 60 lần/phút | `RATELIMIT_API = '60/m'` |
+| Upload File | 10 file/giờ | `RATELIMIT_UPLOAD = '10/h'` |
+| Comment | 10 lần/giờ | `RATELIMIT_COMMENT = '10/h'` |
+| Report | 5 lần/ngày | `RATELIMIT_REPORT = '5/d'` |
+
+#### C. Auto-Block IP (Tự động chặn IP vi phạm)
+
+**📍 Vị trí:** `config/settings/security.py` dòng 211-216
+
+```python
+AUTO_BLOCK_IP_CONDITIONS = {
+    'failed_logins': 10,         # 10 lần login sai → Block
+    'spam_posts': 20,            # 20 bài đăng/giờ → Block
+    'suspicious_requests': 100,  # 100 request bất thường/phút → Block
+}
+```
+
+#### D. Cấu hình SQL Server (Database Level)
+
+**📍 Vị trí:** Chạy trong SQL Server Management Studio (SSMS)
+
+```sql
+-- 1. Giới hạn thời gian query (Query Timeout)
+-- Ngắt kết nối query chạy quá 30 giây
+EXEC sp_configure 'remote query timeout', 30;
+RECONFIGURE;
+
+-- 2. Giới hạn số kết nối đồng thời
+-- Tối đa 100 connections (0 = unlimited)
+EXEC sp_configure 'user connections', 100;
+RECONFIGURE;
+
+-- 3. Giới hạn bộ nhớ SQL Server sử dụng
+-- Tối đa 4GB RAM (tính bằng MB)
+EXEC sp_configure 'max server memory', 4096;
+RECONFIGURE;
+
+-- 4. Resource Governor - Tạo pool giới hạn CPU và Memory
+CREATE RESOURCE POOL LimitedPool
+WITH (
+    MAX_CPU_PERCENT = 50,        -- Tối đa 50% CPU
+    MAX_MEMORY_PERCENT = 30      -- Tối đa 30% Memory
+);
+
+CREATE WORKLOAD GROUP WebAppGroup
+USING LimitedPool;
+
+-- 5. Kiểm tra cấu hình
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure;
+```
+
+#### E. Bảng tổng hợp giới hạn tài nguyên
+
+| Loại giới hạn | Mức | Giá trị | Vị trí |
+|---------------|-----|---------|--------|
+| **Số câu truy vấn/phút** | App | 60 req/phút | `security.py` - Rate Limit |
+| **Timeout query lớn** | DB | 30 giây | SQL Server `sp_configure` |
+| **Ngưỡng CPU** | DB | 70% | SQL Server Resource Governor |
+| **Ngưỡng Memory** | DB | 50% hoặc 4GB | SQL Server `sp_configure` |
+| **Số user CSDL đồng thời** | DB | 100 connections | SQL Server `sp_configure` |
+| **Session timeout** | App | 15 phút | `security.py` dòng 51 |
+| **Max thiết bị đăng nhập** | App | 3 thiết bị | `security.py` dòng 243 |
+| **Max request đồng thời/group** | DB | 50 requests | Resource Governor |
+| **Max CPU time/query** | DB | 30 giây | Resource Governor |
+
+#### 📁 Script tự động cấu hình
+
+**📍 Vị trí:** `scripts/sql/resource_governor.sql`
+
+```
+Cách chạy:
+1. Mở SQL Server Management Studio (SSMS)
+2. Kết nối với quyền sysadmin
+3. Mở file scripts/sql/resource_governor.sql
+4. Nhấn F5 để chạy toàn bộ script
+```
+
+---
+
+## 📊 PHẦN 2: BẢO MẬT HỆ THỐNG (Django)
+
+---
+
+### 🔷 NHÓM 1: `config/settings/security.py`
+
+| Dòng | Tính năng | Mô tả |
+|------|-----------|-------|
+| 18-24 | **Password Hashers** | Argon2, PBKDF2 |
+| 27-75 | **HTTPS/HSTS** | SECURE_SSL_REDIRECT, HSTS |
+| 77-110 | **CSP Headers** | Content-Security-Policy |
+| 120-145 | **Session Security** | HttpOnly, Secure, SameSite |
+| 160-170 | **reCAPTCHA** | RECAPTCHA_PUBLIC_KEY, SECRET_KEY |
+| 172-184 | **Rate Limiting** | RATELIMIT_LOGIN = '5/m' |
+| 186-196 | **Account Lockout** | MAX_LOGIN_ATTEMPTS = 5 |
+| 218-222 | **IP Whitelist/Blacklist** | IP_WHITELIST, IP_BLACKLIST |
+| 224-237 | **Audit Config** | AUDIT_LOG_ACTIONS |
+| 240-244 | **Device Tracking** | MAX_CONCURRENT_SESSIONS = 3 |
+| 273-297 | **WAF Patterns** | SQL Injection, XSS regex |
+
+---
+
+### 🔷 NHÓM 2: `config/settings/base.py`
+
+| Dòng | Tính năng | Mô tả |
+|------|-----------|-------|
+| 20 | **ALLOWED_HOSTS** | Danh sách domain được phép |
+| 23-28 | **CSRF_TRUSTED_ORIGINS** | Domain tin cậy cho CSRF |
+| 95 | **CSRF Middleware** | django.middleware.csrf.CsrfViewMiddleware |
+| 102-105 | **Custom Middleware** | IP Filter, WAF, Audit, Device Tracking |
+
+---
+
+### 🔷 NHÓM 3: `apps/accounts/views.py`
+
+| Dòng | Tính năng | Mô tả |
+|------|-----------|-------|
+| 51-64 | **track_failed_login()** | Ghi log đăng nhập thất bại |
+| 72-91 | **check_login_throttling()** | Kiểm tra IP bị khóa |
+| 170-184 | **verify_password()** | Xác thực password với salt |
+| 187-190 | **hash_password()** | Hash SHA-256 + Salt |
+| 197-427 | **login_view()** | Login + reCAPTCHA + Brute force |
+| 429-465 | **login_2fa_view()** | Xác thực OTP |
+| 540-650 | **google_login/callback()** | OAuth 2.0 Google |
+| 780-860 | **setup_2fa_view()** | Tạo QR code 2FA |
+| 1055-1134 | **password_reset_view()** | Reset password qua email OTP |
+
+---
+
+### 🔷 NHÓM 4: `apps/accounts/models.py`
+
+| Dòng | Model | Mô tả |
+|------|-------|-------|
+| 26-45 | **Taikhoan** | password_hash, password_salt, is_locked |
+| 60-90 | **Khachhang** | is_2fa_enabled, totp_secret |
+| 101-146 | **2FA Methods** | enable_2fa(), verify_totp() |
+| 164-186 | **LoginHistory** | IP, device, browser, location |
+| 190-205 | **FailedLoginAttempts** | Theo dõi đăng nhập thất bại |
+| 206-220 | **BlockedIps** | Danh sách IP bị chặn |
+| 223-240 | **SecurityLogs** | Log sự kiện bảo mật |
+| 243-260 | **AuditLogs** | Log thay đổi dữ liệu |
+
+---
+
+### 🔷 NHÓM 5: `apps/accounts/security.py`
+
+| Dòng | Hàm | Mô tả |
+|------|-----|-------|
+| 15-25 | **get_client_ip()** | Lấy IP thực của client |
+| 28-40 | **check_ip_blocked()** | Kiểm tra IP có bị chặn |
+| 44-73 | **log_failed_login()** | Ghi log + auto-block IP |
+| 76-86 | **log_security_event()** | Ghi log sự kiện bảo mật |
+| 89-93 | **lock_account()** | Khóa tài khoản |
+| 104-114 | **check_account_locked()** | Kiểm tra tài khoản bị khóa |
+| 117-128 | **increment_failed_login()** | Tăng đếm thất bại |
+| 131-134 | **reset_failed_login()** | Reset đếm sau login thành công |
+
+---
+
+### 🔷 NHÓM 6: `apps/security/middleware/` (Thư mục Middleware)
+
+| File | Class | Mô tả |
+|------|-------|-------|
+| `ip_filter.py` | **IPFilterMiddleware** | Chặn IP trong blacklist |
+| `waf.py` | **WAFMiddleware** | Chặn SQL Injection, XSS, Path Traversal |
+| `audit.py` | **AuditMiddleware** | Ghi log các request quan trọng |
+| `device_tracking.py` | **DeviceTrackingMiddleware** | Theo dõi thiết bị đăng nhập |
+
+---
+
+### 🔷 NHÓM 7: Templates (CSRF Token)
+
+| File | Tính năng |
+|------|-----------|
+| `templates/accounts/login.html` | `{% csrf_token %}`, reCAPTCHA widget |
+| `templates/accounts/register.html` | `{% csrf_token %}` |
+| `templates/**/*.html` | Tất cả form đều có `{% csrf_token %}` |
+
+---
+
+## 📊 PHẦN 3: BẢNG TỔNG HỢP NHANH
+
+### 🗄️ BẢO MẬT DATABASE
+
+| # | Loại bảo mật | Vị trí |
+|---|--------------|--------|
+| 1 | Always Encrypted | `config/settings/development.py` dòng 47 |
+| 2 | TDE | SQL Server (SSMS) |
+| 3 | Dynamic Data Masking | SQL Server (SSMS) |
+| 4 | Row-Level Security | SQL Server (SSMS) |
+| 5 | Stored Procedures | SQL Server (SSMS) |
+| 6 | Audit Triggers | SQL Server (SSMS) |
+| 7 | Backup | `scripts/backup_database.py` |
+
+### 🖥️ BẢO MẬT HỆ THỐNG
+
+| # | Loại bảo mật | Vị trí chính |
+|---|--------------|--------------|
+| 1 | Password Hashing (SHA-256 + Salt) | `apps/accounts/views.py` dòng 170-190 |
+| 2 | 2FA (TOTP) | `apps/accounts/models.py` dòng 101-146 |
+| 3 | OAuth 2.0 (Google) | `apps/accounts/views.py` dòng 540-650 |
+| 4 | reCAPTCHA | `config/settings/security.py` dòng 160-170 |
+| 5 | CSRF Protection | `config/settings/base.py` dòng 95 |
+| 6 | WAF | `apps/security/middleware/waf.py` |
+| 7 | Rate Limiting | `config/settings/security.py` dòng 172-184 |
+| 8 | Brute Force Protection | `apps/accounts/views.py` dòng 51-91 |
+| 9 | IP Blocking | `apps/security/middleware/ip_filter.py` |
+| 10 | Session Security | `config/settings/security.py` dòng 120-145 |
+| 11 | HTTPS/HSTS | `config/settings/security.py` dòng 27-75 |
+| 12 | CSP Headers | `config/settings/security.py` dòng 77-110 |
+| 13 | Audit Logging | `apps/security/middleware/audit.py` |
+| 14 | Device Tracking | `apps/security/middleware/device_tracking.py` |
+| 15 | Login History | `apps/accounts/models.py` dòng 164-186 |
+
+---
+
+## 📂 SƠ ĐỒ CẤU TRÚC FILE BẢO MẬT
+
+```
+PhongTroATTT/
+├── config/
+│   └── settings/
+│       ├── base.py              ← CSRF, Middleware, ALLOWED_HOSTS
+│       ├── security.py          ← TẤT CẢ CẤU HÌNH BẢO MẬT
+│       └── development.py       ← Always Encrypted connection
+│
+├── apps/
+│   ├── accounts/
+│   │   ├── views.py             ← Login, 2FA, OAuth, Password Hash
+│   │   ├── models.py            ← Models bảo mật (LoginHistory, BlockedIps...)
+│   │   └── security.py          ← Helper functions (hash, verify, lock)
+│   │
+│   └── security/
+│       └── middleware/
+│           ├── ip_filter.py     ← Chặn IP
+│           ├── waf.py           ← Web Application Firewall
+│           ├── audit.py         ← Ghi log request
+│           └── device_tracking.py ← Theo dõi thiết bị
+│
+├── scripts/
+│   └── backup_database.py       ← Backup tự động
+│
+└── templates/
+    └── accounts/
+        ├── login.html           ← CSRF token, reCAPTCHA
+        └── *.html               ← Tất cả form có CSRF token
+```
+
+---
+
+## ✅ CHECKLIST BẢO MẬT
+
+### Database (SQL Server)
+- [x] Always Encrypted cho CCCD, SDT
+- [x] Password hash lưu dạng binary
+- [ ] TDE (cần bật thủ công)
+- [ ] Dynamic Data Masking (cần chạy script)
+- [ ] Row-Level Security (cần chạy script)
+- [x] Audit Triggers
+- [x] Backup script
+
+### Application (Django)
+- [x] Password Hashing (SHA-256 + Salt)
+- [x] 2FA (TOTP với Google Authenticator)
+- [x] OAuth 2.0 (Google Sign-In)
+- [x] reCAPTCHA (sau 3 lần sai)
+- [x] CSRF Protection
+- [x] WAF Middleware
+- [x] Rate Limiting
+- [x] Brute Force Protection
+- [x] IP Blocking
+- [x] Session Security (HttpOnly, Secure, SameSite)
+- [x] HTTPS/HSTS
+- [x] CSP Headers
+- [x] Audit Logging
+- [x] Device Tracking
+- [x] Login History
+
+---
+
+**Tổng cộng: 20+ tính năng bảo mật được triển khai!** 🎉
+
